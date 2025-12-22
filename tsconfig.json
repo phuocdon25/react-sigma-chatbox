@@ -25,6 +25,6 @@
       "*": ["*"]
     }
   },
-  "include": ["components", "services", "types.ts", "index.ts"],
+  "include": ["components", "services", "types.ts", "index.tsx"],
   "exclude": ["node_modules", "dist", "App.tsx", "main.tsx"]
 }

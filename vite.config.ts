@@ -15,12 +15,12 @@ export default defineConfig({
     react(),
     dts({ 
       insertTypesEntry: true,
-      include: ['components/**', 'services/**', 'types.ts', 'index.ts']
+      include: ['components/**', 'services/**', 'types.ts', 'index.tsx']
     })
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'index.ts'),
+      entry: resolve(__dirname, 'index.tsx'),
       name: 'ReactSigmaChatbox',
       fileName: (format) => `index.${format === 'es' ? 'mjs' : 'js'}`,
       formats: ['es', 'umd']
