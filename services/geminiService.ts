@@ -6,7 +6,8 @@ export class GeminiService {
   private ai: GoogleGenAI;
 
   constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Cast to string as we assume it's pre-configured and valid per guidelines
+    this.ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
   }
 
   /**
