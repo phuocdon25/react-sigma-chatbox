@@ -1,82 +1,61 @@
 # React Sigma Chatbox ✨
 
-A high-performance, aesthetically pleasing React chatbox library inspired by modern AI assistants (like Bitu). Built with **Tailwind CSS**, it supports rich content like product carousels and smooth AI streaming responses.
+Thư viện React Chatbox hiệu năng cao, giao diện hiện đại được lấy cảm hứng từ các trợ lý AI hàng đầu (như Bitu). Hỗ trợ hiển thị sản phẩm (Product Carousel), phản hồi thời gian thực (AI Streaming) và tùy biến hoàn toàn qua Tailwind CSS.
 
 ---
 
-## ✨ Features
+## ✨ Tính năng nổi bật
 
-- 🚀 **AI Streaming**: Supports `AsyncGenerator` for real-time "typing" effects.
-- 🛍️ **Product Carousel**: Built-in support for rich product cards with horizontal scrolling.
-- 🎨 **Tailwind Optimized**: Ultra-lightweight, easy to theme via your existing Tailwind config.
-- 📦 **Self-contained**: Uses **internal SVGs** for icons and **CSS keyframes** for animations. No external dependencies like FontAwesome required.
+- 🚀 **AI Streaming**: Hỗ trợ `AsyncGenerator` tạo hiệu ứng gõ chữ thời gian thực.
+- 🛍️ **Product Carousel**: Hiển thị danh sách sản phẩm đẹp mắt, hỗ trợ vuốt ngang.
+- 🎨 **Tailwind Optimized**: Siêu nhẹ, dễ dàng thay đổi màu sắc chủ đạo qua cấu hình.
+- 📦 **Self-contained**: Sử dụng **SVG nội bộ** và **CSS Keyframes** tích hợp sẵn. Không cần cài thêm FontAwesome hay thư viện icon bên ngoài.
 
 ---
 
-## 📦 Installation & Setup
+## 📦 Hướng dẫn Cài đặt & Tích hợp
 
-### 1. Integration from NPM
+### 1. Cài đặt từ NPM (Khi thư viện đã được publish)
 ```bash
 npm install react-sigma-chatbox
 ```
 
-### 2. Local Development (Embedding without NPM)
-If you are developing locally and want to use this source in another project:
+### 2. Sử dụng Local (Khi bạn đang phát triển bộ Kit này)
+Nếu bạn đang dùng thư viện này cho một dự án khác ở máy cục bộ (Local), hãy làm theo các bước sau để tránh lỗi "Module not found":
 
-**Option A: Using `npm link` (Best for development)**
-1. In this library folder: `npm run build` then `npm link`
-2. In your target project: `npm link react-sigma-chatbox`
-
-**Option B: Direct Path Install**
-1. In your target project: `npm install ../path-to/react-sigma-chatbox`
-
-### 3. Import CSS (Crucial)
-You **must** import the CSS file in your main entry file (e.g., `App.tsx` or `main.tsx`) for animations and icons to work:
-
-```tsx
-import { Chatbox } from 'react-sigma-chatbox';
-import 'react-sigma-chatbox/dist/style.css'; // Don't forget this!
+**Bước 1: Build thư viện**
+Trong thư mục của `react-sigma-chatbox`, bạn PHẢI chạy lệnh build để tạo ra thư mục `dist`:
+```bash
+npm run build
 ```
+
+**Bước 2: Liên kết (Link)**
+- Tại thư mục thư viện: `npm link`
+- Tại thư mục dự án của bạn: `npm link react-sigma-chatbox`
+
+**Lưu ý quan trọng về CSS:**
+Nếu bạn gặp lỗi `Failed to resolve import "react-sigma-chatbox/dist/style.css"`, đó là vì thư mục `dist` chưa có. Hãy chắc chắn đã chạy `npm run build`.
 
 ---
 
-## 🎨 Tailwind CSS Configuration
-Since this library uses Tailwind utility classes, you must add the library's path to your **target project's** `tailwind.config.js`:
+## 🚀 Cách sử dụng cơ bản
 
-```javascript
-// tailwind.config.js
-export default {
-  content: [
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/react-sigma-chatbox/**/*.{js,ts,jsx,tsx}", // For NPM
-    // "../react-sigma-chatbox/components/**/*.{js,ts,jsx,tsx}", // For local link
-  ],
-  theme: {
-    extend: {
-      // Standard animations (chat-pop, msg-fade-in) are already in style.css
-    }
-  }
-}
-```
-
----
-
-## 🚀 Basic Usage
+Trong file `App.tsx` của bạn:
 
 ```tsx
 import { Chatbox } from 'react-sigma-chatbox';
-import 'react-sigma-chatbox/dist/style.css';
+import 'react-sigma-chatbox/dist/style.css'; // Bắt buộc phải có để hiển thị icon và animation
 
 const App = () => {
   const config = {
     primaryColor: '#6366f1',
     botName: 'Sigma Assistant',
-    welcomeMessage: 'Hello! I am your AI assistant. How can I help you today?',
-    quickReplies: ['Check Prices', 'Latest iPhone', 'Tell a story']
+    welcomeMessage: 'Chào bạn! Tôi có thể giúp gì cho bạn?',
+    quickReplies: ['Giá iPhone 15', 'Chính sách bảo hành']
   };
 
   const handleAiResponse = async (input) => {
-    return "This is a simple text response.";
+    return "Đây là phản hồi từ AI của bạn.";
   };
 
   return <Chatbox config={config} onGetAiResponse={handleAiResponse} />;
@@ -85,42 +64,57 @@ const App = () => {
 
 ---
 
-## 🛠️ Advanced: AI Response Patterns
+## 🛠️ Hướng dẫn nâng cao: AI Response Patterns
 
-The `onGetAiResponse` prop is highly flexible. You can implement two main patterns:
+Prop `onGetAiResponse` cho phép bạn tùy biến phản hồi cực kỳ linh hoạt:
 
-### Pattern A: Product Carousel (Promise)
-Return an object containing `text` and a `products` array to show product cards.
+### Pattern A: Hiển thị danh sách sản phẩm (Product Carousel)
+Trả về một Object chứa `text` và mảng `products`.
 
 ```tsx
 const handleAi = async (userInput) => {
-  // Simulate API call
   return {
-    text: "Here are some top-rated products for you:",
+    text: "Đây là các sản phẩm bạn quan tâm:",
     products: [
       { 
         id: '1', 
         name: 'iPhone 15 Pro', 
         price: '24.990.000₫', 
-        image: 'https://picsum.photos/200/200', 
-        description: 'Titanium design' 
+        image: 'https://link-anh.com/iphone.png', 
+        description: 'Chip A17 Pro mạnh mẽ' 
       },
-      // ... more products
+      // ... thêm sản phẩm khác
     ]
   };
 };
 ```
 
-### Pattern B: AI Streaming (Async Generator)
-Use `async function*` to yield text chunks for a "live typing" experience.
+### Pattern B: Phản hồi dạng gõ chữ (Streaming)
+Sử dụng `async function*` để gửi từng từ (chunk) về giao diện.
 
 ```tsx
 async function* handleAiStream(userInput) {
-  const words = ["Thinking...", " Here", " is", " a", " live", " response", " for", " you."];
+  const words = ["Đang", " suy", " nghĩ...", " Đây", " là", " câu", " trả", " lời."];
   for (const word of words) {
-    await new Promise(r => setTimeout(r, 100)); // Simulate delay
+    await new Promise(r => setTimeout(r, 100)); // Giả lập độ trễ
     yield word;
   }
+}
+```
+
+---
+
+## 🎨 Cấu hình Tailwind CSS
+Để các class của thư viện hoạt động trong dự án của bạn, hãy thêm đường dẫn vào `tailwind.config.js`:
+
+```javascript
+// tailwind.config.js
+export default {
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/react-sigma-chatbox/**/*.{js,ts,jsx,tsx}", 
+  ],
+  // ...
 }
 ```
 
@@ -131,24 +125,25 @@ async function* handleAiStream(userInput) {
 ### Chatbox Props
 | Prop | Type | Description |
 | :--- | :--- | :--- |
-| `config` | `ChatboxConfig` | Object defining visual behavior. |
-| `onGetAiResponse` | `AiResponseHandler` | Function to process input. Bypasses internal Gemini if provided. |
+| `config` | `ChatboxConfig` | Cấu hình giao diện và nội dung chào mừng. |
+| `onGetAiResponse` | `AiResponseHandler` | Hàm xử lý tin nhắn. Nếu bỏ trống, thư viện sẽ dùng Gemini mặc định. |
 
 ### ChatboxConfig
-| Property | Type | Default |
+| Thuộc tính | Kiểu dữ liệu | Mặc định |
 | :--- | :--- | :--- |
 | `primaryColor` | `string` | `#ef4444` |
 | `botName` | `string` | `Sigma AI` |
-| `welcomeMessage`| `string` | (Required) Initial greeting. |
-| `placeholder` | `string` | `Ask me anything...` |
+| `welcomeMessage`| `string` | (Bắt buộc) Câu chào đầu tiên. |
+| `placeholder` | `string` | `Nhập câu hỏi...` |
 | `quickReplies` | `string[]` | `[]` |
 
 ---
 
-## ⚠️ Troubleshooting
+## ⚠️ Xử lý lỗi thường gặp
 
-- **Missing Icons/Animations**: Ensure you imported `dist/style.css` and added the library path to your `tailwind.config.js` `content` array.
-- **Hook Errors**: If you get "Invalid hook call", it usually means you have duplicate React versions. Use `npm link ../your-project/node_modules/react` in the library folder to fix it.
+1. **Lỗi "Module not found: dist/style.css"**: Bạn chưa chạy `npm run build` trong thư mục thư viện.
+2. **Icon không hiển thị**: Đảm bảo đã import file CSS và cấu hình `content` trong `tailwind.config.js`.
+3. **Lỗi "Invalid hook call"**: Thường do xung đột phiên bản React. Hãy chạy `npm link <đường-dẫn-tới-dự-án>/node_modules/react` trong thư mục thư viện để đồng bộ phiên bản.
 
 ---
 
