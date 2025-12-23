@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import dts from 'vite-plugin-dts';
 
-// Giả lập __dirname trong môi trường ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
@@ -32,8 +31,14 @@ export default defineConfig({
           react: 'React',
           'react-dom': 'ReactDOM',
           '@google/genai': 'GoogleGenAI'
+        },
+        // Đảm bảo CSS được đặt tên cố định
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.name === 'style.css') return 'style.css';
+          return assetInfo.name || 'assets/[name]-[hash][extname]';
         }
       }
-    }
+    },
+    cssCodeSplit: false // Gộp toàn bộ CSS vào 1 file duy nhất
   }
 });

@@ -37,3 +37,12 @@ export interface ChatboxConfig {
   avatarUrl: string;
   quickReplies: string[];
 }
+
+/**
+ * Flexible handler for AI responses.
+ * Can return a simple string (Promise) or an AsyncGenerator for streaming.
+ */
+export type AiResponseHandler = (
+  userInput: string, 
+  history: Message[]
+) => Promise<string | { text: string; products?: Product[] }> | AsyncGenerator<string>;

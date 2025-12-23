@@ -1,75 +1,97 @@
-
 # React Sigma Chatbox
 
-A high-performance, beautiful, and customizable React chatbox library. This library features a modern UI, product carousel rendering, quick reply support, and built-in Google Gemini AI integration.
+A premium, UI-only React library for building professional AI chat interfaces. Decouple your frontend from your backend logic with a powerful callback-driven architecture.
 
 ---
 
-## 🚀 For Developers (Chủ dự án)
+## 📖 Detailed Integration Guide
 
-Nếu bạn là người phát triển hoặc muốn chỉnh sửa thư viện này, hãy làm theo các bước sau:
+The `onGetAiResponse` prop is the heart of this library. It gives you full control over how the bot responds.
 
-### 1. Cài đặt môi trường
-```bash
-npm install
+### 1. Response Types
+
+Your handler can return three types of data:
+
+#### A. Simple Text (Promise)
+Ideal for quick, one-off answers.
+```tsx
+const handler = async (userInput) => {
+  return "This is a direct answer.";
+};
 ```
 
-### 2. Chạy môi trường Sandbox (Kiểm thử giao diện)
-Lệnh này sẽ chạy file `App.tsx` để bạn xem trước Chatbox hoạt động như thế nào:
-```bash
-npm run dev
-```
-
-### 3. Đóng gói thư viện (Build)
-Trước khi chia sẻ hoặc sử dụng thư viện ở dự án khác, bạn phải build nó ra thư mục `dist`:
-```bash
-npm run build
-```
-
----
-
-## 📦 For Library Users (Người sử dụng thư viện)
-
-### 1. Cài đặt qua NPM
-```bash
-npm install react-sigma-chatbox
-```
-
-### 2. 🔑 Setup API KEY (CỰC KỲ QUAN TRỌNG)
-Vì thư viện chạy trên trình duyệt, bạn cần "tiêm" API Key vào thông qua cấu hình bundler của dự án bạn.
-
-#### File `.env` của dự án mẹ:
-```env
-VITE_API_KEY=your_actual_gemini_api_key
-```
-
-#### Cấu hình `vite.config.ts` (Dự án dùng Vite):
-```typescript
-import { defineConfig, loadEnv } from 'vite';
-
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+#### B. Rich Data with Products (Object)
+Use this to display the built-in product carousel.
+```tsx
+const handler = async (userInput) => {
   return {
-    define: {
-      'process.env.API_KEY': JSON.stringify(env.VITE_API_KEY)
-    }
+    text: "Check out these deals:",
+    products: [
+      { id: '1', name: 'Product A', price: '100$', image: '...' }
+    ]
   };
-});
+};
+```
+
+#### C. Streaming Text (Async Generator)
+Simulate an "AI Typing" effect. Perfect for LLMs like GPT or Gemini.
+```tsx
+const handler = async function* (userInput) {
+  const words = ["Hello", " world", " from", " Sigma!"];
+  for (const word of words) {
+    await delay(100);
+    yield word; // Each yield updates the UI in real-time
+  }
+};
+```
+
+### 2. Using Conversation History
+The second argument of the handler provides the full history of the current session.
+```tsx
+const handler = async (userInput, history) => {
+  console.log(`User sent ${history.length} messages so far.`);
+  return `You just said: ${userInput}`;
+};
+```
+
+### 3. Real Backend Integration Example
+```tsx
+const handleWithBackend = async function* (text) {
+  const response = await fetch('/api/chat', { 
+    method: 'POST', 
+    body: JSON.stringify({ prompt: text }) 
+  });
+  
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    yield decoder.decode(value);
+  }
+};
 ```
 
 ---
 
-## Critical Styling Setup
+## 🎨 Configuration Options
 
-Thêm đường dẫn này vào `tailwind.config.js` của dự án chính để nhận được style của chatbox:
+| Prop | Type | Description |
+|------|------|-------------|
+| `primaryColor` | `string` | Colors for buttons, user bubbles, and borders. |
+| `botName` | `string` | Display name in the header. |
+| `welcomeMessage` | `string` | The very first message shown to the user. |
+| `avatarUrl` | `string` | Bot image in the header and bubbles. |
+| `quickReplies` | `string[]` | Array of strings for suggestion chips. |
 
-```javascript
-content: [
-  "./index.html",
-  "./src/**/*.{js,ts,jsx,tsx}",
-  "./node_modules/react-sigma-chatbox/dist/**/*.{js,mjs,ts,tsx}",
-],
-```
+---
+
+## 📦 Distribution
+To build the library for production:
+1. `npm run build`
+2. The `dist/` folder will contain `index.mjs` and `style.css`.
+3. In your main project: `import 'react-sigma-chatbox/dist/style.css'`.
 
 ## License
 MIT

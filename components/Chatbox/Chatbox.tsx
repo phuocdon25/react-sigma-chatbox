@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ChatboxConfig, Message, MessageType, SenderType } from '../../types';
+import { ChatboxConfig, Message, MessageType, SenderType, AiResponseHandler } from '../../types';
 import { ChatHeader } from './ChatHeader';
 import { ChatMessages } from './ChatMessages';
 import { ChatInput } from './ChatInput';
@@ -9,9 +9,14 @@ import { geminiService } from '../../services/geminiService';
 
 interface ChatboxProps {
   config: ChatboxConfig;
+  /**
+   * Custom handler to process user messages.
+   * If provided, the internal Gemini logic will be bypassed.
+   */
+  onGetAiResponse?: AiResponseHandler;
 }
 
-export const Chatbox: React.FC<ChatboxProps> = ({ config }) => {
+export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -19,18 +24,16 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config }) => {
       id: 'welcome',
       type: MessageType.TEXT,
       sender: SenderType.AI,
-      content: 'Chào bạn, mình là trợ lý AI của FPTShop!\nBạn cần hỗ trợ gì hoặc có thể chọn một trong các chủ đề dưới đây nhé\nTrong quá trình tư vấn, nếu chưa hài lòng với câu trả lời của Bitu, bạn vui lòng chat "Tôi muốn gặp tư vấn viên" để được hỗ trợ.',
+      content: config.welcomeMessage,
       timestamp: new Date()
     }
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Tự động cuộn xuống khi có tin nhắn mới hoặc nội dung tin nhắn đang stream thay đổi
   useEffect(() => {
     if (scrollRef.current && isOpen) {
       const { scrollHeight, clientHeight, scrollTop } = scrollRef.current;
-      // Chỉ cuộn nếu người dùng đang ở gần đáy hoặc tin nhắn mới vừa được thêm
       const isNearBottom = scrollHeight - clientHeight - scrollTop < 150;
       if (isNearBottom || isLoading) {
         scrollRef.current.scrollTo({
@@ -44,6 +47,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config }) => {
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
 
+    // 1. Add User Message
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       type: MessageType.TEXT,
@@ -53,6 +57,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config }) => {
     };
     setMessages(prev => [...prev, userMsg]);
     
+    // 2. Prepare AI Placeholder
     const aiMsgId = `ai-${Date.now()}`;
     const initialAiMsg: Message = {
       id: aiMsgId,
@@ -65,34 +70,75 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config }) => {
     setIsLoading(true);
 
     try {
-      const chatHistory = messages
-        .filter(m => m.type === MessageType.TEXT)
-        .map(m => ({
-          role: m.sender === SenderType.USER ? 'user' : 'model',
-          text: m.content
-        }));
-
-      const stream = geminiService.getChatResponseStream(text, chatHistory);
-      
-      let fullContent = '';
-      let isFirstChunk = true;
-
-      for await (const chunk of stream) {
-        if (isFirstChunk) {
-          setMessages(prev => [...prev, initialAiMsg]);
-          setIsLoading(false);
-          isFirstChunk = false;
-        }
-
-        fullContent += chunk;
+      // 3. Determine which handler to use
+      if (onGetAiResponse) {
+        const response = await onGetAiResponse(text, messages);
         
-        setMessages(prev => prev.map(msg => 
-          msg.id === aiMsgId ? { ...msg, content: fullContent } : msg
-        ));
+        // Handle Async Generator (Streaming)
+        if (typeof response !== 'string' && Symbol.asyncIterator in (response as any)) {
+          let fullContent = '';
+          let isFirstChunk = true;
+
+          for await (const chunk of (response as AsyncGenerator<string>)) {
+            if (isFirstChunk) {
+              setMessages(prev => [...prev, initialAiMsg]);
+              setIsLoading(false);
+              isFirstChunk = false;
+            }
+            fullContent += chunk;
+            setMessages(prev => prev.map(msg => 
+              msg.id === aiMsgId ? { ...msg, content: fullContent } : msg
+            ));
+          }
+        } 
+        // Handle Simple Object or String (Direct Response)
+        else {
+          setIsLoading(false);
+          const finalResult = typeof response === 'string' ? { text: response } : response;
+          const finalAiMsg: Message = {
+            ...initialAiMsg,
+            content: (finalResult as any).text,
+            products: (finalResult as any).products,
+            type: (finalResult as any).products ? MessageType.PRODUCT_LIST : MessageType.TEXT
+          };
+          setMessages(prev => [...prev, finalAiMsg]);
+        }
+      } 
+      else {
+        // Fallback to internal Gemini Service
+        const chatHistory = messages
+          .filter(m => m.type === MessageType.TEXT)
+          .map(m => ({
+            role: m.sender === SenderType.USER ? 'user' : 'model',
+            text: m.content
+          }));
+
+        const stream = geminiService.getChatResponseStream(text, chatHistory);
+        let fullContent = '';
+        let isFirstChunk = true;
+
+        for await (const chunk of stream) {
+          if (isFirstChunk) {
+            setMessages(prev => [...prev, initialAiMsg]);
+            setIsLoading(false);
+            isFirstChunk = false;
+          }
+          fullContent += chunk;
+          setMessages(prev => prev.map(msg => 
+            msg.id === aiMsgId ? { ...msg, content: fullContent } : msg
+          ));
+        }
       }
     } catch (err) {
-      console.error("Chat Stream Error:", err);
+      console.error("Chat Processing Error:", err);
       setIsLoading(false);
+      setMessages(prev => [...prev, {
+        id: `err-${Date.now()}`,
+        type: MessageType.TEXT,
+        sender: SenderType.AI,
+        content: "Error processing message. Please try again.",
+        timestamp: new Date()
+      }]);
     }
   };
 
@@ -104,7 +150,6 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config }) => {
     setIsExpanded(!isExpanded);
   };
 
-  // Xác định các lớp CSS dựa trên trạng thái isOpen và isExpanded
   const chatContainerClasses = `
     fixed z-[99] overflow-hidden flex flex-col transition-all duration-300 ease-in-out border border-white/40 shadow-[0_15px_50px_rgba(0,0,0,0.12)] bg-[#fff1f2] animate-chat-pop
     ${isExpanded 
@@ -119,7 +164,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config }) => {
         isOpen={isOpen} 
         onClick={() => {
           setIsOpen(!isOpen);
-          if (isOpen) setIsExpanded(false); // Thu nhỏ lại khi đóng
+          if (isOpen) setIsExpanded(false);
         }} 
         primaryColor={config.primaryColor} 
       />
@@ -127,7 +172,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config }) => {
       {isOpen && (
         <div className={chatContainerClasses}>
           <ChatHeader 
-            title="Trợ lý AI - Bitu" 
+            title={config.botName} 
             primaryColor={config.primaryColor} 
             onClose={() => {
               setIsOpen(false);
@@ -137,7 +182,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config }) => {
               id: 'welcome',
               type: MessageType.TEXT,
               sender: SenderType.AI,
-              content: 'Chào bạn, mình là trợ lý AI của FPTShop!\nBạn cần hỗ trợ gì hoặc có thể chọn một trong các chủ đề dưới đây nhé\nTrong quá trình tư vấn, nếu chưa hài lòng với câu trả lời của Bitu, bạn vui lòng chat "Tôi muốn gặp tư vấn viên" để được hỗ trợ.',
+              content: config.welcomeMessage,
               timestamp: new Date()
             }])}
             onToggleExpand={toggleExpand}
@@ -164,7 +209,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config }) => {
               primaryColor={config.primaryColor}
             />
             <div className="px-3 pb-2 text-[10px] text-gray-400 text-center tracking-tight leading-none">
-               Thông tin được AI hỗ trợ chỉ mang tính chất tham khảo
+               Powered by Sigma AI Core
             </div>
           </div>
         </div>
