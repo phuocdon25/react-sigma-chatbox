@@ -1,106 +1,98 @@
 # React Sigma Chatbox ✨
 
-Thư viện React Chatbox hiệu năng cao, giao diện hiện đại được lấy cảm hứng từ các trợ lý AI hàng đầu (như Bitu). Hỗ trợ hiển thị sản phẩm (Product Carousel), phản hồi thời gian thực (AI Streaming) và tùy biến hoàn toàn qua Tailwind CSS.
+Thư viện React Chatbox hiệu năng cao, giao diện hiện đại được lấy cảm hứng từ trợ lý AI Bitu của FPT Shop.
 
 ---
 
-## ✨ Tính năng nổi bật
+## 🛠️ Cách tự xây dựng AI Service (Ví dụ mẫu)
 
-- 🚀 **AI Streaming**: Hỗ trợ `AsyncGenerator` tạo hiệu ứng gõ chữ thời gian thực.
-- 🛍️ **Product Carousel**: Hiển thị danh sách sản phẩm đẹp mắt, hỗ trợ vuốt ngang.
-- 🎨 **Tailwind Optimized**: Siêu nhẹ, dễ dàng thay đổi màu sắc chủ đạo qua cấu hình.
-- 📦 **Self-contained**: Sử dụng **SVG nội bộ** và **CSS Keyframes** tích hợp sẵn.
+Nếu bạn dùng thư viện này ở một dự án khác, bạn nên tạo một file service riêng để xử lý logic AI. Dưới đây là code mẫu hoàn chỉnh bạn có thể copy:
 
----
+### 1. File: `AIService.ts` (Ở dự án của bạn)
 
-## 📦 Hướng dẫn Cài đặt & Tích hợp
+```typescript
+import { GoogleGenAI } from "@google/genai";
 
-### 1. Cài đặt từ NPM
-```bash
-npm install react-sigma-chatbox
+export class AIService {
+  private ai: any;
+
+  constructor(apiKey: string) {
+    this.ai = new GoogleGenAI({ apiKey });
+  }
+
+  // Hàm xử lý trả về text + sản phẩm hoặc chỉ text
+  async handleRequest(input: string, history: any[]) {
+    const query = input.toLowerCase();
+
+    // GIẢ LẬP: Trả về danh sách sản phẩm nếu hỏi về iPhone
+    if (query.includes("iphone")) {
+      return {
+        text: "Dạ, đây là các mẫu iPhone mới nhất tại cửa hàng em:",
+        products: [
+          {
+            id: '1',
+            name: 'iPhone 15 Pro Max 256GB',
+            price: '29.490.000₫',
+            image: 'https://images.fpt.shop/unsafe/fit-in/214x214/filters:quality(90):fill(white)/fptshop.com.vn/Uploads/Originals/2023/9/13/638302096701832135_iphone-15-pro-max-gold-1.jpg',
+            description: 'Chip A17 Pro mạnh mẽ'
+          }
+        ]
+      };
+    }
+
+    // THỰC TẾ: Gọi Gemini để lấy phản hồi dạng Streaming (Gõ chữ)
+    return this.generateStream(input, history);
+  }
+
+  private async *generateStream(input: string, history: any[]) {
+    const response = await this.ai.models.generateContentStream({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: 'user', parts: [{ text: input }] }]
+    });
+
+    for await (const chunk of response) {
+      yield chunk.text || "";
+    }
+  }
+}
 ```
 
-### 2. Sử dụng Local (npm link)
-Nếu bạn đang dùng thư viện này cho một dự án khác ở máy cục bộ:
-
-**Bước 1: Build thư viện**
-```bash
-npm run build
-```
-
-**Bước 2: Liên kết (Link)**
-- Tại thư mục thư viện: `npm link`
-- Tại thư mục dự án của bạn: `npm link react-sigma-chatbox`
-
----
-
-## 🚀 Cách sử dụng cơ bản
-
-Trong file `App.tsx` của bạn, hãy đảm bảo import đúng tên file CSS từ thư mục `dist`:
-
+### 2. Cách kết nối vào Component
+bn7 
 ```tsx
 import { Chatbox } from 'react-sigma-chatbox';
-// LƯU Ý: Tên file CSS chính xác là react-sigma-chatbox.css
-import 'react-sigma-chatbox/dist/react-sigma-chatbox.css'; 
+import 'react-sigma-chatbox/dist/style.css';
+import { AIService } from './AIService';
 
-const App = () => {
-  const config = {
-    primaryColor: '#6366f1',
-    botName: 'Sigma Assistant',
-    welcomeMessage: 'Chào bạn! Tôi có thể giúp gì cho bạn?',
-    quickReplies: ['Giá iPhone 15', 'Chính sách bảo hành']
-  };
+const ai = new AIService("YOUR_API_KEY");
 
-  const handleAiResponse = async (input) => {
-    return "Đây là phản hồi từ AI của bạn.";
-  };
+function App() {
+  const handleAi = (input, history) => ai.handleRequest(input, history);
 
-  return <Chatbox config={config} onGetAiResponse={handleAiResponse} />;
-};
-```
-
----
-
-## 🛠️ AI Response Patterns
-
-### Pattern A: Product Carousel
-```tsx
-const handleAi = async (userInput) => {
-  return {
-    text: "Sản phẩm gợi ý:",
-    products: [{ id: '1', name: 'iPhone 15', price: '20tr', image: '...', description: '...' }]
-  };
-};
-```
-
-### Pattern B: Streaming (Gõ chữ)
-```tsx
-async function* handleAiStream(userInput) {
-  yield "Đang "; yield "trả "; yield "lời...";
+  return (
+    <Chatbox 
+      onGetAiResponse={handleAi}
+      config={{
+        botName: "Sigma AI",
+        welcomeMessage: "Chào bạn, tôi có thể giúp gì?",
+        // ...
+      }}
+    />
+  );
 }
 ```
 
 ---
 
-## 🎨 Cấu hình Tailwind CSS
-Thêm đường dẫn vào `tailwind.config.js` của dự án sử dụng:
+## 📦 Các kiểu phản hồi (onGetAiResponse)
 
-```javascript
-export default {
-  content: [
-    "./src/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/react-sigma-chatbox/**/*.{js,ts,jsx,tsx}", 
-  ],
-}
-```
+Hàm `onGetAiResponse` của bạn có thể trả về 3 định dạng:
 
----
-
-## ⚠️ Xử lý lỗi "Module not found"
-
-Nếu bạn gặp lỗi không tìm thấy CSS, hãy kiểm tra thư mục `node_modules/react-sigma-chatbox/dist/`. Tên file CSS thường được Vite đặt theo tên project trong `package.json`. Nếu nó là `react-sigma-chatbox.css`, hãy import đúng tên đó.
+1. **String**: Hiện tin nhắn văn bản ngay lập tức.
+2. **Object**: `{ text: string, products: Product[] }` để hiện Carousel sản phẩm.
+3. **Async Generator (yield)**: Để tạo hiệu ứng AI đang gõ chữ từng từ một.
 
 ---
 
 ## 📄 License
-MIT © [Your Name]
+MIT

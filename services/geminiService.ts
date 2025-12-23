@@ -1,51 +1,53 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-export class GeminiService {
+// Initialize the Google GenAI client with the API key from environment variables.
+// Always use the named parameter for the API key as per the guidelines.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+export const geminiService = {
   /**
-   * Phương thức streaming phản hồi từ Gemini
+   * Generates a streaming response from the Gemini model based on user input and chat history.
+   * @param userInput - The current message sent by the user.
+   * @param history - The history of the current conversation session.
+   * @returns An AsyncGenerator yielding chunks of generated text.
    */
-  async *getChatResponseStream(userInput: string, history: { role: string, text: string }[]) {
+  getChatResponseStream: async function* (userInput: string, history: { role: string; text: string }[]) {
+    // Construct the contents array for the multi-turn conversation context.
+    const contents = history.map(entry => ({
+      role: entry.role === 'user' ? 'user' : 'model',
+      parts: [{ text: entry.text }]
+    }));
+
+    // Add the current user query to the contents.
+    contents.push({
+      role: 'user',
+      parts: [{ text: userInput }]
+    });
+
     try {
-      // Khởi tạo instance ngay tại đây để đảm bảo lấy được giá trị mới nhất của API_KEY
-      const apiKey = process.env.API_KEY;
-      
-      if (!apiKey) {
-        yield "Lỗi: Không tìm thấy API Key. Vui lòng cấu hình process.env.API_KEY trong dự án của bạn.";
-        return;
-      }
-
-      const ai = new GoogleGenAI({ apiKey });
-      const contents = [
-        ...history.map(h => ({
-          role: h.role,
-          parts: [{ text: h.text }]
-        })),
-        {
-          role: 'user',
-          parts: [{ text: userInput }]
-        }
-      ];
-
-      const responseStream = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      // Use gemini-3-flash-preview for general-purpose chat tasks with low latency.
+      const response = await ai.models.generateContentStream({
+        model: 'gemini-3-flash-preview',
         contents: contents,
         config: {
-          systemInstruction: `Bạn là Sigma, một trợ lý AI thông minh và thân thiện. 
-          Hãy trả lời người dùng một cách chuyên nghiệp nhưng gần gũi bằng tiếng Việt.
-          Nếu người dùng hỏi về kỹ thuật, hãy giải thích rõ ràng.
-          LƯU Ý: Hiện tại hãy chỉ trả về văn bản thuần túy (Plain text).`,
-          temperature: 0.7,
-        }
+          // Provide a system instruction to define the persona and language of the bot.
+          systemInstruction: 'Bạn là Sigma Expert AI, trợ lý hỗ trợ khách hàng của FPT Shop. Hãy tư vấn sản phẩm công nghệ một cách lịch sự, chuyên nghiệp và hữu ích bằng tiếng Việt.',
+        },
       });
 
-      yield responseStream.text || "";
-      
+      // Iterate through the stream chunks.
+      for await (const chunk of response) {
+        // Access the .text property directly (do not call it as a method).
+        const text = chunk.text;
+        if (text) {
+          yield text;
+        }
+      }
     } catch (error) {
-      console.error("Gemini Error:", error);
-      yield "Xin lỗi, hiện tại mình đang gặp chút trục trặc khi kết nối với AI. Bạn vui lòng kiểm tra lại cấu hình API Key nhé!";
+      console.error("Gemini API stream error:", error);
+      // Re-throw the error to ensure the UI can handle and display an error state.
+      throw error;
     }
   }
-}
-
-export const geminiService = new GeminiService();
+};

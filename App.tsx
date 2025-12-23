@@ -1,43 +1,80 @@
 import React from 'react';
 import { Chatbox } from './components/Chatbox/Chatbox';
-import { ChatboxConfig, Message } from './types';
-import './style.css'; // File CSS gốc cho môi trường dev
+import { ChatboxConfig, Product } from './types';
+import './style.css';
 
 const App: React.FC = () => {
   const config: ChatboxConfig = {
     primaryColor: '#6366f1',
-    botName: 'Sigma Tailwind AI',
-    welcomeMessage: 'Chào bạn! Tôi là trợ lý Sigma. Bạn có thể hỏi tôi về các sản phẩm công nghệ hoặc yêu cầu kể chuyện.',
-    placeholder: 'Nhập câu hỏi...',
+    botName: 'Sigma Expert AI',
+    welcomeMessage: 'Chào bạn! Thử gõ "iphone" để xem danh sách sản phẩm hoặc hỏi bất cứ điều gì khác.',
+    placeholder: 'Nhập câu hỏi của bạn...',
     avatarUrl: 'https://fptshop.com.vn/img/bitu/bitu-avatar.png',
-    quickReplies: ['Điện thoại iPhone', 'Laptop mới', 'Kể chuyện AI']
+    quickReplies: ['Tư vấn iPhone 15', 'Giảm giá hôm nay', 'Kể chuyện vui']
   };
 
-  const handleAiResponse = async function* (userInput: string) {
+  /**
+   * HÀM GIẢ LẬP (MOCK AI HANDLER)
+   * Bạn có thể copy logic này sang dự án khác và thay thế bằng gọi API thật.
+   */
+  const handleAiInteraction = async function* (userInput: string) {
     const query = userInput.toLowerCase();
-    if (query.includes('điện thoại')) {
+
+    // 1. Giả lập trả về Sản phẩm
+    if (query.includes('iphone')) {
+      const mockProducts: Product[] = [
+        {
+          id: 'ip15',
+          name: 'iPhone 15 Pro Max 256GB',
+          price: '29.490.000₫',
+          discount: '-15%',
+          image: 'https://images.fpt.shop/unsafe/fit-in/214x214/filters:quality(90):fill(white)/fptshop.com.vn/Uploads/Originals/2023/9/13/638302096701832135_iphone-15-pro-max-gold-1.jpg',
+          description: 'Khung viền Titan siêu bền.'
+        },
+        {
+          id: 'ip15plus',
+          name: 'iPhone 15 Plus 128GB',
+          price: '22.990.000₫',
+          image: 'https://images.fpt.shop/unsafe/fit-in/214x214/filters:quality(90):fill(white)/fptshop.com.vn/Uploads/Originals/2023/9/13/638302143093902342_iphone-15-plus-pink-1.jpg',
+          description: 'Pin bền bỉ nhất dòng iPhone.'
+        }
+      ];
+      
+      // Để hiện sản phẩm, ta return về một Object thay vì dùng yield
       return {
-        text: "Gợi ý cho bạn:",
-        products: [{ id: '1', name: 'iPhone 15', price: '24tr', image: 'https://picsum.photos/200/200', description: 'Mới nhất' }]
+        text: "Dạ, đây là các dòng iPhone đang có giá tốt nhất ạ:",
+        products: mockProducts
       };
     }
-    yield "Tôi đang xử lý câu hỏi của bạn...";
+
+    // 2. Giả lập hiệu ứng gõ chữ (Streaming)
+    const sentences = [
+      "Chào bạn, ",
+      "tôi là hệ thống AI giả lập. ",
+      "Hàm này đang dùng 'AsyncGenerator' để tạo hiệu ứng gõ chữ từng chữ một. ",
+      "Bạn có thể kết nối Gemini API thật vào đây cực kỳ dễ dàng!"
+    ];
+
+    for (const text of sentences) {
+      await new Promise(r => setTimeout(r, 400)); // Chờ 400ms giả vờ đang suy nghĩ
+      yield text;
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col items-center justify-center p-6">
-      <div className="max-w-3xl w-full bg-white rounded-[40px] p-12 shadow-2xl border border-white/50">
-        <h1 className="text-6xl font-black mb-6 tracking-tight">
-          Sigma <span className="text-indigo-600">UI Kit</span>
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
+      <div className="max-w-4xl w-full text-center space-y-6">
+        <h1 className="text-6xl font-black text-slate-900 tracking-tighter">
+          React Sigma <span className="text-indigo-600">Chatbox</span>
         </h1>
-        <p className="text-lg text-slate-500 mb-10">
-          Môi trường kiểm thử thư viện Chatbox.
+        <p className="text-lg text-slate-500 max-w-xl mx-auto">
+          Demo thư viện UI Chatbox. Hãy xem <strong>README.md</strong> để biết cách viết AI Service cho dự án của bạn.
         </p>
       </div>
 
       <Chatbox 
         config={config} 
-        onGetAiResponse={handleAiResponse as any} 
+        onGetAiResponse={handleAiInteraction as any} 
       />
     </div>
   );
