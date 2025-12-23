@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Message, MessageType, SenderType } from '../../types';
 import { ProductCard } from './ProductCard';
@@ -108,9 +107,9 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             alt="AI Loading"
           />
           <div className="flex gap-1 bg-white px-3 py-2 rounded-[16px] rounded-tl-none border-none shadow-sm">
-            <span className="w-1.5 h-1.5 bg-indigo-300 rounded-full animate-bounce"></span>
-            <span className="w-1.5 h-1.5 bg-indigo-300 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-            <span className="w-1.5 h-1.5 bg-indigo-300 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+            <span className="w-1.5 h-1.5 bg-indigo-300 rounded-full animate-sigma-bounce"></span>
+            <span className="w-1.5 h-1.5 bg-indigo-300 rounded-full animate-sigma-bounce [animation-delay:0.2s]"></span>
+            <span className="w-1.5 h-1.5 bg-indigo-300 rounded-full animate-sigma-bounce [animation-delay:0.4s]"></span>
           </div>
         </div>
       )}

@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface ChatHeaderProps {
@@ -40,23 +39,27 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         <button 
           onClick={onReset} 
           className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/60 transition-all"
-          title="Tải lại"
+          title="Reset chat"
         >
-          <i className="fa-solid fa-rotate-right text-[13px]"></i>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
         </button>
         <button 
           onClick={onToggleExpand}
           className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/60 transition-all" 
-          title={isExpanded ? "Thu nhỏ" : "Mở rộng"}
+          title={isExpanded ? "Collapse" : "Expand"}
         >
-          <i className={`fa-solid ${isExpanded ? 'fa-compress' : 'fa-expand'} text-[12px]`}></i>
+          {isExpanded ? (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14h6v6"></path><path d="M20 10h-6V4"></path><path d="M14 10l7-7"></path><path d="M10 14l-7 7"></path></svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
+          )}
         </button>
         <button 
           onClick={onClose} 
-          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/60 transition-all text-xl"
-          title="Đóng"
+          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/60 transition-all"
+          title="Close"
         >
-          <i className="fa-solid fa-xmark text-lg"></i>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
         </button>
       </div>
     </div>

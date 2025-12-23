@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 interface ChatInputProps {
@@ -42,7 +41,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ placeholder, onSendMessage
             text.trim() ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-300'
           }`}
         >
-          <i className="fa-solid fa-arrow-up text-sm"></i>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 7-7 7 7"></path><path d="M12 19V5"></path></svg>
         </button>
       </div>
     </div>
