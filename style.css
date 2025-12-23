@@ -4,6 +4,7 @@
 @tailwind utilities;
 
 @layer components {
+  /* Scrollbar cho khung chat */
   .chat-scrollbar::-webkit-scrollbar {
     width: 5px;
   }
@@ -15,17 +16,18 @@
     border-radius: 10px;
   }
   
+  /* Ẩn scrollbar cho carousel sản phẩm */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
-@keyframes chat-pop {
-  0% { transform: scale(0.9) translateY(20px); opacity: 0; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
-}
-
-@keyframes msg-fade-in {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+@layer utilities {
+  .product-card-snap {
+    scroll-snap-align: start;
+  }
 }

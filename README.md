@@ -1,97 +1,146 @@
 # React Sigma Chatbox
 
-A premium, UI-only React library for building professional AI chat interfaces. Decouple your frontend from your backend logic with a powerful callback-driven architecture.
+A high-performance, aesthetically pleasing React chatbox library inspired by modern AI assistants (like Bitu). Built with **Tailwind CSS**, it supports rich content like product carousels and smooth AI streaming responses.
+
+## ✨ Features
+
+- 🚀 **AI Streaming**: Supports `AsyncGenerator` for real-time typing effects.
+- 🛍️ **Product Carousel**: Built-in support for rich product cards and horizontal scrolling.
+- 🎨 **Tailwind Optimized**: Lightweight and easy to theme via your existing Tailwind config.
+- 📱 **Fully Responsive**: Adapts perfectly to mobile and desktop with an expandable view.
+- 🛠️ **Customizable**: Control colors, avatars, initial messages, and quick replies.
 
 ---
 
-## 📖 Detailed Integration Guide
+## 📦 Installation & Setup
 
-The `onGetAiResponse` prop is the heart of this library. It gives you full control over how the bot responds.
+### 1. Integration from NPM
+Install the package via npm or yarn:
+```bash
+npm install react-sigma-chatbox
+```
 
-### 1. Response Types
+### 2. Local Integration (Embedding without NPM)
+If you want to use this source code in another local project without publishing:
 
-Your handler can return three types of data:
+**Option A: Using `npm link`**
+1. In the library folder: `npm run build` then `npm link`
+2. In your target project: `npm link react-sigma-chatbox`
 
-#### A. Simple Text (Promise)
-Ideal for quick, one-off answers.
+**Option B: Direct Path Install**
+1. In your target project: `npm install ../path-to/react-sigma-chatbox`
+
+---
+
+## 🎨 Tailwind CSS Configuration (Required)
+Since this library uses Tailwind utility classes, you must add the library's path to your **target project's** `tailwind.config.js` so it can scan the classes:
+
+```javascript
+// tailwind.config.js
+export default {
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/react-sigma-chatbox/**/*.{js,ts,jsx,tsx}", // Important!
+  ],
+  theme: {
+    extend: {
+      keyframes: {
+        'chat-pop': {
+          '0%': { transform: 'scale(0.9) translateY(20px)', opacity: '0' },
+          '100%': { transform: 'scale(1) translateY(0)', opacity: '1' },
+        },
+        'msg-fade-in': {
+          'from': { opacity: '0', transform: 'translateY(10px)' },
+          'to': { opacity: '1', transform: 'translateY(0)' },
+        }
+      },
+      animation: {
+        'chat-pop': 'chat-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
+        'msg': 'msg-fade-in 0.3s ease-out forwards',
+      }
+    },
+  },
+}
+```
+
+---
+
+## 🚀 Basic Usage
+
 ```tsx
-const handler = async (userInput) => {
-  return "This is a direct answer.";
+import { Chatbox } from 'react-sigma-chatbox';
+
+const App = () => {
+  const config = {
+    primaryColor: '#2563eb',
+    botName: 'Sigma Assistant',
+    welcomeMessage: 'Hello! How can I help you today?',
+    avatarUrl: 'https://path-to-avatar.png',
+    quickReplies: ['Check Prices', 'Contact Support']
+  };
+
+  const handleAi = async (input) => {
+    return "This is a simple response.";
+  };
+
+  return <Chatbox config={config} onGetAiResponse={handleAi} />;
 };
 ```
 
-#### B. Rich Data with Products (Object)
-Use this to display the built-in product carousel.
+---
+
+## 🛠️ Advanced: AI Response Handling
+
+The `onGetAiResponse` prop is highly flexible. It supports two main patterns:
+
+### Pattern A: Product Carousel (Promise)
+Return an object containing `text` and a `products` array.
+
 ```tsx
-const handler = async (userInput) => {
+const handleAi = async (input) => {
   return {
-    text: "Check out these deals:",
+    text: "Check out our best sellers:",
     products: [
-      { id: '1', name: 'Product A', price: '100$', image: '...' }
+      { id: '1', name: 'Product A', price: '100$', image: '...', description: '...' }
     ]
   };
 };
 ```
 
-#### C. Streaming Text (Async Generator)
-Simulate an "AI Typing" effect. Perfect for LLMs like GPT or Gemini.
+### Pattern B: AI Streaming (Async Generator)
+Yield chunks of text to create a "live typing" effect.
+
 ```tsx
-const handler = async function* (userInput) {
-  const words = ["Hello", " world", " from", " Sigma!"];
+async function* handleAiStream(input) {
+  const words = ["Thinking...", " Here", " is", " your", " answer."];
   for (const word of words) {
-    await delay(100);
-    yield word; // Each yield updates the UI in real-time
+    await new Promise(r => setTimeout(r, 100));
+    yield word;
   }
-};
-```
-
-### 2. Using Conversation History
-The second argument of the handler provides the full history of the current session.
-```tsx
-const handler = async (userInput, history) => {
-  console.log(`User sent ${history.length} messages so far.`);
-  return `You just said: ${userInput}`;
-};
-```
-
-### 3. Real Backend Integration Example
-```tsx
-const handleWithBackend = async function* (text) {
-  const response = await fetch('/api/chat', { 
-    method: 'POST', 
-    body: JSON.stringify({ prompt: text }) 
-  });
-  
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    yield decoder.decode(value);
-  }
-};
+}
 ```
 
 ---
 
-## 🎨 Configuration Options
+## 📖 API Reference
 
+### Chatbox Props
 | Prop | Type | Description |
-|------|------|-------------|
-| `primaryColor` | `string` | Colors for buttons, user bubbles, and borders. |
-| `botName` | `string` | Display name in the header. |
-| `welcomeMessage` | `string` | The very first message shown to the user. |
-| `avatarUrl` | `string` | Bot image in the header and bubbles. |
-| `quickReplies` | `string[]` | Array of strings for suggestion chips. |
+| :--- | :--- | :--- |
+| `config` | `ChatboxConfig` | Object defining the appearance and behavior. |
+| `onGetAiResponse` | `AiResponseHandler` | Function to process messages. Bypasses internal Gemini if provided. |
+
+### ChatboxConfig
+| Property | Type | Default |
+| :--- | :--- | :--- |
+| `primaryColor` | `string` | `#ef4444` |
+| `botName` | `string` | `Sigma AI` |
+| `welcomeMessage`| `string` | Required |
+| `placeholder` | `string` | `Ask me anything...` |
+| `avatarUrl` | `string` | Optional |
+| `quickReplies` | `string[]` | `[]` |
 
 ---
 
-## 📦 Distribution
-To build the library for production:
-1. `npm run build`
-2. The `dist/` folder will contain `index.mjs` and `style.css`.
-3. In your main project: `import 'react-sigma-chatbox/dist/style.css'`.
-
-## License
-MIT
+## 📄 License
+MIT © [Your Name]

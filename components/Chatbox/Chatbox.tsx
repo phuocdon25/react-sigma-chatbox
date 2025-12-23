@@ -57,7 +57,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
     };
     setMessages(prev => [...prev, userMsg]);
     
-    // 2. Prepare AI Placeholder
+    // 2. Prepare AI Placeholder ID
     const aiMsgId = `ai-${Date.now()}`;
     const initialAiMsg: Message = {
       id: aiMsgId,
@@ -70,16 +70,16 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
     setIsLoading(true);
 
     try {
-      // 3. Determine which handler to use
       if (onGetAiResponse) {
-        const response = await onGetAiResponse(text, messages);
+        // Execute the handler - it might return a Promise OR an AsyncGenerator
+        const responseResult = onGetAiResponse(text, messages);
         
-        // Handle Async Generator (Streaming)
-        if (typeof response !== 'string' && Symbol.asyncIterator in (response as any)) {
+        // Check if it's an AsyncGenerator (for streaming)
+        if (responseResult && typeof responseResult === 'object' && Symbol.asyncIterator in responseResult) {
           let fullContent = '';
           let isFirstChunk = true;
 
-          for await (const chunk of (response as AsyncGenerator<string>)) {
+          for await (const chunk of (responseResult as AsyncGenerator<string>)) {
             if (isFirstChunk) {
               setMessages(prev => [...prev, initialAiMsg]);
               setIsLoading(false);
@@ -91,8 +91,9 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
             ));
           }
         } 
-        // Handle Simple Object or String (Direct Response)
+        // It's a Promise (Direct Response)
         else {
+          const response = await responseResult;
           setIsLoading(false);
           const finalResult = typeof response === 'string' ? { text: response } : response;
           const finalAiMsg: Message = {
@@ -105,7 +106,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
         }
       } 
       else {
-        // Fallback to internal Gemini Service
+        // Fallback to internal Gemini Service (which is also streaming)
         const chatHistory = messages
           .filter(m => m.type === MessageType.TEXT)
           .map(m => ({
@@ -136,7 +137,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
         id: `err-${Date.now()}`,
         type: MessageType.TEXT,
         sender: SenderType.AI,
-        content: "Error processing message. Please try again.",
+        content: "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",
         timestamp: new Date()
       }]);
     }
@@ -151,10 +152,10 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
   };
 
   const chatContainerClasses = `
-    fixed z-[99] overflow-hidden flex flex-col transition-all duration-300 ease-in-out border border-white/40 shadow-[0_15px_50px_rgba(0,0,0,0.12)] bg-[#fff1f2] animate-chat-pop
+    fixed z-[99] overflow-hidden flex flex-col transition-all duration-300 ease-in-out border border-white/40 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] bg-[#fff] animate-chat-pop
     ${isExpanded 
       ? 'bottom-4 right-4 md:right-4 w-[95vw] md:w-[850px] h-[92vh] md:h-[85vh] rounded-[32px]' 
-      : 'bottom-6 right-4 md:right-[72px] w-[92vw] md:w-[360px] h-[75vh] md:h-[600px] rounded-[28px]'
+      : 'bottom-6 right-4 md:right-[72px] w-[92vw] md:w-[380px] h-[75vh] md:h-[600px] rounded-[28px]'
     }
   `;
 
@@ -190,7 +191,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
           />
 
           <div 
-            className="flex-1 overflow-y-auto chat-scrollbar px-3 pt-2" 
+            className="flex-1 overflow-y-auto chat-scrollbar px-3 pt-2 bg-slate-50/50" 
             ref={scrollRef}
           >
              <ChatMessages 
@@ -202,13 +203,13 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
               />
           </div>
 
-          <div className="bg-white m-3 rounded-[22px] shadow-sm border border-red-50/30 overflow-hidden">
+          <div className="bg-white p-3 border-t border-slate-100">
             <ChatInput 
               placeholder={config.placeholder} 
               onSendMessage={handleSendMessage} 
               primaryColor={config.primaryColor}
             />
-            <div className="px-3 pb-2 text-[10px] text-gray-400 text-center tracking-tight leading-none">
+            <div className="mt-2 text-[10px] text-slate-400 text-center tracking-tight leading-none uppercase font-bold opacity-60">
                Powered by Sigma AI Core
             </div>
           </div>
