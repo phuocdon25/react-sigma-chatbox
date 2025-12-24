@@ -1,96 +1,138 @@
 # React Sigma Chatbox ✨
 
-Thư viện React Chatbox hiệu năng cao, giao diện hiện đại được lấy cảm hứng từ trợ lý AI Bitu của FPT Shop.
+A high-performance, modern React Chatbox UI library inspired by the Bitu AI assistant (FPT Shop). It features a sleek design, support for product carousels, quick replies, and built-in compatibility with the Gemini AI streaming API.
 
 ---
 
-## 🛠️ Cách tự xây dựng AI Service (Ví dụ mẫu)
+## 🚀 Development Setup
 
-Nếu bạn dùng thư viện này ở một dự án khác, bạn nên tạo một file service riêng để xử lý logic AI. Dưới đây là code mẫu hoàn chỉnh bạn có thể copy:
+If you have cloned this repository and want to run the demo or continue development:
 
-### 1. File: `AIService.ts` (Ở dự án của bạn)
+1.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
 
+2.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+    The demo application will be available at `http://localhost:5173`.
+
+3.  **Build the library:**
+    ```bash
+    npm run build
+    ```
+    This generates the `dist` folder containing the compiled library (`index.mjs`, `index.js`) and the bundled CSS (`style.css`).
+
+---
+
+## 📦 Integrating into Another Local Project
+
+### 1. Link or Copy the Library
+You can use the library in your other local projects before it's published to NPM:
+
+**Option A: NPM Link**
+1. In the `react-sigma-chatbox` directory: `npm link`
+2. In your target project directory: `npm link react-sigma-chatbox`
+
+**Option B: Manual Copy**
+Copy the `dist` folder directly into your project and import from it.
+
+### 2. Tailwind CSS Configuration
+To ensure the chatbox styles are correctly applied in your target project, update your `tailwind.config.js`. Use the following configuration which is verified to work:
+
+```javascript
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./src/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/react-sigma-chatbox/**/*.{js,ts,jsx,tsx}", 
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+```
+
+### 3. Import Styles
+Import the library's stylesheet in your entry file (e.g., `main.tsx` or `App.tsx`):
 ```typescript
-import { GoogleGenAI } from "@google/genai";
-
-export class AIService {
-  private ai: any;
-
-  constructor(apiKey: string) {
-    this.ai = new GoogleGenAI({ apiKey });
-  }
-
-  // Hàm xử lý trả về text + sản phẩm hoặc chỉ text
-  async handleRequest(input: string, history: any[]) {
-    const query = input.toLowerCase();
-
-    // GIẢ LẬP: Trả về danh sách sản phẩm nếu hỏi về iPhone
-    if (query.includes("iphone")) {
-      return {
-        text: "Dạ, đây là các mẫu iPhone mới nhất tại cửa hàng em:",
-        products: [
-          {
-            id: '1',
-            name: 'iPhone 15 Pro Max 256GB',
-            price: '29.490.000₫',
-            image: 'https://images.fpt.shop/unsafe/fit-in/214x214/filters:quality(90):fill(white)/fptshop.com.vn/Uploads/Originals/2023/9/13/638302096701832135_iphone-15-pro-max-gold-1.jpg',
-            description: 'Chip A17 Pro mạnh mẽ'
-          }
-        ]
-      };
-    }
-
-    // THỰC TẾ: Gọi Gemini để lấy phản hồi dạng Streaming (Gõ chữ)
-    return this.generateStream(input, history);
-  }
-
-  private async *generateStream(input: string, history: any[]) {
-    const response = await this.ai.models.generateContentStream({
-      model: "gemini-3-flash-preview",
-      contents: [{ role: 'user', parts: [{ text: input }] }]
-    });
-
-    for await (const chunk of response) {
-      yield chunk.text || "";
-    }
-  }
-}
-```
-
-### 2. Cách kết nối vào Component
-bn7 
-```tsx
-import { Chatbox } from 'react-sigma-chatbox';
 import 'react-sigma-chatbox/dist/style.css';
-import { AIService } from './AIService';
-
-const ai = new AIService("YOUR_API_KEY");
-
-function App() {
-  const handleAi = (input, history) => ai.handleRequest(input, history);
-
-  return (
-    <Chatbox 
-      onGetAiResponse={handleAi}
-      config={{
-        botName: "Sigma AI",
-        welcomeMessage: "Chào bạn, tôi có thể giúp gì?",
-        // ...
-      }}
-    />
-  );
-}
 ```
 
 ---
 
-## 📦 Các kiểu phản hồi (onGetAiResponse)
+## 🛠 Basic & Streaming Usage
 
-Hàm `onGetAiResponse` của bạn có thể trả về 3 định dạng:
+The `Chatbox` component is highly flexible and can handle both standard Promises and Async Generators (for streaming).
 
-1. **String**: Hiện tin nhắn văn bản ngay lập tức.
-2. **Object**: `{ text: string, products: Product[] }` để hiện Carousel sản phẩm.
-3. **Async Generator (yield)**: Để tạo hiệu ứng AI đang gõ chữ từng từ một.
+### Standard Text Response (Promise)
+Ideal for simple logic or traditional API calls.
+```tsx
+const handleSimpleAi = async (userInput: string) => {
+  return "Hello! I am your AI assistant. How can I help you today?";
+};
+
+<Chatbox onGetAiResponse={handleSimpleAi} config={config} />
+```
+
+### Streaming Response (Async Generator)
+Use this for real-time "typing" effects, similar to ChatGPT or Gemini.
+```tsx
+async function* handleStreamingAi(userInput: string) {
+  const chunks = ["Hello there! ", "I am ", "Sigma AI. ", "I can ", "help you ", "find products."];
+  for (const chunk of chunks) {
+    await new Promise(r => setTimeout(r, 150)); // Simulating network delay
+    yield chunk;
+  }
+}
+
+<Chatbox onGetAiResponse={handleStreamingAi} config={config} />
+```
+
+### Product Carousel Response
+You can return an object containing both text and an array of products.
+```tsx
+const handleProductSearch = async (userInput: string) => {
+  if (userInput.toLowerCase().includes("iphone")) {
+    return {
+      text: "Check out our latest iPhone models:",
+      products: [
+        {
+          id: 'ip15',
+          name: 'iPhone 15 Pro Max',
+          price: '29.990.000₫',
+          image: 'https://example.com/iphone15.jpg',
+          description: 'The ultimate iPhone.'
+        }
+      ]
+    };
+  }
+  return "Sorry, I couldn't find that product.";
+};
+```
+
+---
+
+## ⚙️ Component Configuration
+
+### Chatbox Props
+| Prop | Type | Description |
+| :--- | :--- | :--- |
+| `config` | `ChatboxConfig` | Object containing UI branding and initial messages. |
+| `onGetAiResponse` | `Function` | (Optional) Logic handler. If omitted, it defaults to the built-in Gemini logic. |
+
+### ChatboxConfig Fields
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `primaryColor` | `string` | Hex color used for buttons, user bubbles, and accents. |
+| `botName` | `string` | The display name shown in the chat header. |
+| `welcomeMessage` | `string` | The initial message sent by the bot. |
+| `placeholder` | `string` | Text displayed in the input field when empty. |
+| `avatarUrl` | `string` | URL for the bot icon. |
+| `quickReplies` | `string[]` | Buttons that appear below the welcome message for one-tap answers. |
 
 ---
 
