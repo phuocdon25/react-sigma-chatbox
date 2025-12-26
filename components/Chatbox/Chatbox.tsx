@@ -46,7 +46,6 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
 
-    // 1. Add User Message
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       type: MessageType.TEXT,
@@ -56,7 +55,6 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
     };
     setMessages(prev => [...prev, userMsg]);
     
-    // 2. Prepare AI Placeholder ID
     const aiMsgId = `ai-${Date.now()}`;
     const initialAiMsg: Message = {
       id: aiMsgId,
@@ -149,8 +147,8 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
   const chatContainerClasses = `
     fixed z-[99] overflow-hidden flex flex-col transition-all duration-300 ease-in-out border border-white/40 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] bg-[#fff] animate-chat-pop
     ${isExpanded 
-      ? 'bottom-4 right-4 md:right-4 w-[95vw] md:w-[850px] h-[92vh] md:h-[85vh] rounded-[32px]' 
-      : 'bottom-6 right-4 md:right-[88px] w-[92vw] md:w-[380px] h-[75vh] md:h-[630px] rounded-[28px]'
+      ? 'bottom-4 right-4 md:bottom-6 md:right-6 w-[95vw] md:w-[850px] h-[92vh] md:h-[85vh] rounded-[32px]' 
+      : 'bottom-[88px] right-4 md:right-6 w-[92vw] md:w-[380px] h-[70vh] md:h-[580px] rounded-[28px]'
     }
   `;
 
