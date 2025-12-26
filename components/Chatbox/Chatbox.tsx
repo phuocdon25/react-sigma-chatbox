@@ -155,7 +155,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
     fixed z-[99] overflow-hidden flex flex-col transition-all duration-300 ease-in-out border border-white/40 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] bg-[#fff] animate-chat-pop
     ${isExpanded 
       ? 'bottom-4 right-4 md:right-4 w-[95vw] md:w-[850px] h-[92vh] md:h-[85vh] rounded-[32px]' 
-      : 'bottom-6 right-4 md:right-[72px] w-[92vw] md:w-[380px] h-[75vh] md:h-[600px] rounded-[28px]'
+      : 'bottom-6 right-4 md:right-[72px] w-[92vw] md:w-[380px] h-[75vh] md:h-[630px] rounded-[28px]'
     }
   `;
 
@@ -191,7 +191,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
           />
 
           <div 
-            className="flex-1 overflow-y-auto chat-scrollbar px-3 pt-2 bg-slate-50/50" 
+            className="flex-1 overflow-y-auto chat-scrollbar px-4 pt-4 pb-6 bg-slate-50/50" 
             ref={scrollRef}
           >
              <ChatMessages 
@@ -204,13 +204,13 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
               />
           </div>
 
-          <div className="bg-white p-3 border-t border-slate-100">
+          <div className="bg-white px-4 py-3 border-t border-slate-100 shadow-[0_-5px_15px_-5px_rgba(0,0,0,0.03)]">
             <ChatInput 
               placeholder={config.placeholder} 
               onSendMessage={handleSendMessage} 
               primaryColor={config.primaryColor}
             />
-            <div className="mt-2 text-[10px] text-slate-400 text-center tracking-tight leading-none uppercase font-bold opacity-60">
+            <div className="mt-2 text-[10px] text-slate-400 text-center tracking-tight leading-none uppercase font-bold opacity-50">
                Powered by Sigma AI Core
             </div>
           </div>
