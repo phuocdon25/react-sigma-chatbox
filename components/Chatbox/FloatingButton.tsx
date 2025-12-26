@@ -4,11 +4,12 @@ interface FloatingButtonProps {
   isOpen: boolean;
   onClick: () => void;
   primaryColor: string;
+  className?: string;
 }
 
-export const FloatingButton: React.FC<FloatingButtonProps> = ({ isOpen, onClick, primaryColor }) => {
+export const FloatingButton: React.FC<FloatingButtonProps> = ({ isOpen, onClick, primaryColor, className = '' }) => {
   return (
-    <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100]">
+    <div className={`fixed bottom-4 right-4 md:bottom-6 md:right-6 z-[100] ${className}`}>
       <button 
         onClick={onClick}
         className={`w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center border transition-all duration-300 overflow-hidden ${

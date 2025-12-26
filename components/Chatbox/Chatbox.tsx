@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatboxConfig, Message, MessageType, SenderType, AiResponseHandler } from '../../types';
 import { ChatHeader } from './ChatHeader';
@@ -145,26 +144,25 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
     setIsExpanded(!isExpanded);
   };
 
-  // Cải tiến Responsive cho Mobile và Desktop:
-  // - Mobile: Full chiều ngang và dính đáy (bottom-0) để không thấy icon.
-  // - Desktop: Có khoảng cách lề (bottom-6) và nằm cạnh icon (right-24).
   const chatContainerClasses = `
     fixed z-[99] overflow-hidden flex flex-col transition-all duration-300 ease-in-out border border-white/40 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] bg-[#fff] animate-chat-pop
     ${isExpanded 
-      ? 'bottom-0 right-0 w-full h-full md:bottom-6 md:right-24 md:w-[850px] md:h-[85vh] rounded-none md:rounded-[32px]' 
-      : 'bottom-0 right-0 w-full h-[80vh] md:bottom-6 md:right-24 md:w-[380px] md:h-[580px] rounded-t-[28px] md:rounded-[28px]'
+      ? 'bottom-0 right-0 w-full h-full md:bottom-6 md:right-28 md:w-[850px] md:h-[85vh] rounded-none md:rounded-[32px]' 
+      : 'bottom-0 right-0 w-full h-[80vh] md:bottom-6 md:right-28 md:w-[380px] md:h-[580px] rounded-t-[28px] md:rounded-[28px]'
     }
   `;
 
   return (
     <>
-      {!isOpen && (
-        <FloatingButton 
-          isOpen={isOpen} 
-          onClick={() => setIsOpen(true)} 
-          primaryColor={config.primaryColor} 
-        />
-      )}
+      <FloatingButton 
+        isOpen={isOpen} 
+        onClick={() => {
+          setIsOpen(!isOpen);
+          if (isOpen) setIsExpanded(false);
+        }} 
+        primaryColor={config.primaryColor}
+        className={isOpen ? 'hidden md:flex' : 'flex'}
+      />
 
       {isOpen && (
         <div className={chatContainerClasses}>
