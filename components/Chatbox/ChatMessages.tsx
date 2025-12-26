@@ -13,40 +13,90 @@ interface ChatMessagesProps {
 }
 
 /**
- * Một component đơn giản để render Markdown cơ bản (Bold, Italic, Lists, Links) 
- * mà không cần thư viện bên thứ ba nặng nề.
+ * Xử lý chuỗi văn bản để tìm và chuyển đổi các định dạng nội dòng (Bold, Links) 
+ * thành mảng các React Nodes.
+ */
+const parseInlineMarkdown = (text: string): React.ReactNode[] => {
+  // Regex cho Bold (**text**) và Links ([text](url))
+  // Kết hợp để tìm theo thứ tự xuất hiện
+  const regex = /(\*\*.*?\*\*|\[.*?\]\(.*?\))/g;
+  const parts = text.split(regex);
+
+  return parts.map((part, i) => {
+    // Xử lý Bold: **text**
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const content = part.slice(2, -2);
+      return <strong key={i} className="font-bold">{content}</strong>;
+    }
+    
+    // Xử lý Link: [text](url)
+    const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
+    if (linkMatch) {
+      const [_, linkText, url] = linkMatch;
+      return (
+        <a 
+          key={i} 
+          href={url} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-blue-600 hover:underline break-all font-medium"
+        >
+          {linkText}
+        </a>
+      );
+    }
+
+    return part;
+  });
+};
+
+/**
+ * Component render Markdown nâng cao hỗ trợ Headings, Lists, Links và Bold.
  */
 const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
-  // Tách dòng và xử lý từng dòng để hỗ trợ danh sách
   const lines = text.split('\n');
   
   return (
-    <>
+    <div className="markdown-body">
       {lines.map((line, idx) => {
-        let content: React.ReactNode = line;
+        const trimmedLine = line.trim();
         
-        // Xử lý Bold: **text**
-        const boldRegex = /\*\*(.*?)\*\*/g;
-        if (boldRegex.test(line)) {
-          const parts = line.split(boldRegex);
-          content = parts.map((part, i) => i % 2 === 1 ? <strong key={i} className="font-bold">{part}</strong> : part);
+        // 1. Xử lý Headings: #, ##, ###
+        const headerMatch = trimmedLine.match(/^(#{1,4})\s+(.*)$/);
+        if (headerMatch) {
+          const level = headerMatch[1].length;
+          const content = headerMatch[2];
+          const className = level === 1 ? 'text-lg font-bold mb-2' : 
+                            level === 2 ? 'text-md font-bold mb-1.5' : 
+                            'text-[14px] font-bold mb-1 text-gray-900';
+          return <div key={idx} className={className}>{parseInlineMarkdown(content)}</div>;
         }
 
-        // Xử lý Italic: *text* (đơn giản hóa)
-        // Lưu ý: regex này có thể xung đột với danh sách (*) nếu không cẩn thận
-        
-        // Xử lý Bullet points: * hoặc - ở đầu dòng
-        const isBullet = line.trim().startsWith('* ') || line.trim().startsWith('- ');
-        
+        // 2. Xử lý Bullet points: * hoặc - ở đầu dòng
+        const bulletMatch = trimmedLine.match(/^[*+-]\s+(.*)$/);
+        if (bulletMatch) {
+          const content = bulletMatch[1];
+          return (
+            <div key={idx} className="flex gap-2 pl-1 mb-1">
+              <span className="text-gray-400 flex-shrink-0">•</span>
+              <div className="flex-1">{parseInlineMarkdown(content)}</div>
+            </div>
+          );
+        }
+
+        // 3. Dòng trống (newline)
+        if (trimmedLine === '') {
+          return <div key={idx} className="h-2" />;
+        }
+
+        // 4. Văn bản bình thường có xử lý inline (Bold, Links)
         return (
-          <div key={idx} className={`${isBullet ? 'pl-4 relative' : ''} mb-0.5`}>
-            {isBullet && <span className="absolute left-0">•</span>}
-            {content}
-            {idx < lines.length - 1 && !isBullet && <br />}
+          <div key={idx} className="mb-1 leading-relaxed">
+            {parseInlineMarkdown(line)}
           </div>
         );
       })}
-    </>
+    </div>
   );
 };
 
@@ -103,7 +153,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           
           <div className={`flex flex-col ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'} max-w-[94%]`}>
             <div 
-              className={`px-3.5 py-2.5 rounded-[16px] text-[13.5px] leading-relaxed shadow-sm ${
+              className={`px-3.5 py-2.5 rounded-[16px] text-[13.5px] shadow-sm ${
                 msg.sender === SenderType.USER 
                   ? 'bg-indigo-600 text-white rounded-tr-none whitespace-pre-line' 
                   : 'bg-white text-gray-800 border-none rounded-tl-none'
