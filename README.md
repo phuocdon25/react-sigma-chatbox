@@ -68,23 +68,37 @@ import 'react-sigma-chatbox/dist/style.css';
 
 The `Chatbox` component is highly flexible and can handle both standard Promises and Async Generators (for streaming).
 
-### Standard Text Response (Promise)
-Ideal for simple logic or traditional API calls.
+### Option 1: Standard Text Response (Plain Text or Markdown)
+You can choose to render responses as plain text (default) or basic Markdown (Bold, Lists, etc.).
+
 ```tsx
+const config = {
+  // ... other config
+  renderMarkdown: true // Set to true to enable Markdown rendering
+};
+
 const handleSimpleAi = async (userInput: string) => {
-  return "Hello! I am your AI assistant. How can I help you today?";
+  // If renderMarkdown is true, this will show "Hello" in bold
+  return "Hello! I am your **AI assistant**. How can I help you today?";
 };
 
 <Chatbox onGetAiResponse={handleSimpleAi} config={config} />
 ```
 
-### Streaming Response (Async Generator)
-Use this for real-time "typing" effects, similar to ChatGPT or Gemini.
+### Option 2: Streaming Response (Async Generator)
+Use this for real-time "typing" effects. Markdown is supported within streams as well.
+
 ```tsx
 async function* handleStreamingAi(userInput: string) {
-  const chunks = ["Hello there! ", "I am ", "Sigma AI. ", "I can ", "help you ", "find products."];
+  const chunks = [
+    "Hello there! ", 
+    "I am **Sigma AI**. ", 
+    "\n\nI can help you with:",
+    "\n* Finding products",
+    "\n* Price comparisons"
+  ];
   for (const chunk of chunks) {
-    await new Promise(r => setTimeout(r, 150)); // Simulating network delay
+    await new Promise(r => setTimeout(r, 150));
     yield chunk;
   }
 }
@@ -92,13 +106,13 @@ async function* handleStreamingAi(userInput: string) {
 <Chatbox onGetAiResponse={handleStreamingAi} config={config} />
 ```
 
-### Product Carousel Response
-You can return an object containing both text and an array of products.
+### Option 3: Product Carousel Response
+You can return an object containing both text (Markdown supported) and an array of products.
 ```tsx
 const handleProductSearch = async (userInput: string) => {
   if (userInput.toLowerCase().includes("iphone")) {
     return {
-      text: "Check out our latest iPhone models:",
+      text: "Check out our latest **iPhone** models:",
       products: [
         {
           id: 'ip15',
@@ -133,6 +147,7 @@ const handleProductSearch = async (userInput: string) => {
 | `placeholder` | `string` | Text displayed in the input field when empty. |
 | `avatarUrl` | `string` | URL for the bot icon. |
 | `quickReplies` | `string[]` | Buttons that appear below the welcome message for one-tap answers. |
+| `renderMarkdown` | `boolean` | (Optional) If `true`, enables basic Markdown support (Bold, Lists) for AI messages. |
 
 ---
 

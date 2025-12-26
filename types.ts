@@ -36,6 +36,11 @@ export interface ChatboxConfig {
   placeholder: string;
   avatarUrl: string;
   quickReplies: string[];
+  /**
+   * Nếu true, tin nhắn từ AI sẽ được render hỗ trợ định dạng Markdown cơ bản.
+   * Mặc định là false (văn bản thuần túy).
+   */
+  renderMarkdown?: boolean;
 }
 
 /**

@@ -200,6 +200,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
                 quickReplies={config.quickReplies}
                 onQuickReply={handleQuickReply}
                 primaryColor={config.primaryColor}
+                renderMarkdown={config.renderMarkdown}
               />
           </div>
 

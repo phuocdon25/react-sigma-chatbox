@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Chatbox } from './components/Chatbox/Chatbox';
 import { ChatboxConfig, Product } from './types';
@@ -10,12 +11,12 @@ const App: React.FC = () => {
     welcomeMessage: 'Chào bạn! Thử gõ "iphone" để xem danh sách sản phẩm hoặc hỏi bất cứ điều gì khác.',
     placeholder: 'Nhập câu hỏi của bạn...',
     avatarUrl: 'https://fptshop.com.vn/img/bitu/bitu-avatar.png',
-    quickReplies: ['Tư vấn iPhone 15', 'Giảm giá hôm nay', 'Kể chuyện vui']
+    quickReplies: ['Tư vấn iPhone 15', 'Giảm giá hôm nay', 'Kể chuyện vui'],
+    renderMarkdown: true // Bật tính năng render Markdown
   };
 
   /**
    * HÀM GIẢ LẬP (MOCK AI HANDLER)
-   * Bạn có thể copy logic này sang dự án khác và thay thế bằng gọi API thật.
    */
   const handleAiInteraction = async function* (userInput: string) {
     const query = userInput.toLowerCase();
@@ -30,33 +31,27 @@ const App: React.FC = () => {
           discount: '-15%',
           image: 'https://images.fpt.shop/unsafe/fit-in/214x214/filters:quality(90):fill(white)/fptshop.com.vn/Uploads/Originals/2023/9/13/638302096701832135_iphone-15-pro-max-gold-1.jpg',
           description: 'Khung viền Titan siêu bền.'
-        },
-        {
-          id: 'ip15plus',
-          name: 'iPhone 15 Plus 128GB',
-          price: '22.990.000₫',
-          image: 'https://images.fpt.shop/unsafe/fit-in/214x214/filters:quality(90):fill(white)/fptshop.com.vn/Uploads/Originals/2023/9/13/638302143093902342_iphone-15-plus-pink-1.jpg',
-          description: 'Pin bền bỉ nhất dòng iPhone.'
         }
       ];
       
-      // Để hiện sản phẩm, ta return về một Object thay vì dùng yield
       return {
-        text: "Dạ, đây là các dòng iPhone đang có giá tốt nhất ạ:",
+        text: "Dạ, đây là các dòng **iPhone** đang có giá tốt nhất ạ:",
         products: mockProducts
       };
     }
 
-    // 2. Giả lập hiệu ứng gõ chữ (Streaming)
-    const sentences = [
-      "Chào bạn, ",
-      "tôi là hệ thống AI giả lập. ",
-      "Hàm này đang dùng 'AsyncGenerator' để tạo hiệu ứng gõ chữ từng chữ một. ",
-      "Bạn có thể kết nối Gemini API thật vào đây cực kỳ dễ dàng!"
+    // 2. Giả lập hiệu ứng gõ chữ (Streaming) với Markdown
+    const chunks = [
+      "Chào bạn, tôi là **Sigma AI**. ",
+      "\n\nTôi có thể giúp bạn:",
+      "\n* Tìm kiếm sản phẩm công nghệ.",
+      "\n* Tư vấn cấu hình máy tính.",
+      "\n* Cung cấp mã giảm giá mới nhất.",
+      "\n\nBạn cần hỗ trợ gì thêm không ạ?"
     ];
 
-    for (const text of sentences) {
-      await new Promise(r => setTimeout(r, 400)); // Chờ 400ms giả vờ đang suy nghĩ
+    for (const text of chunks) {
+      await new Promise(r => setTimeout(r, 300));
       yield text;
     }
   };
@@ -68,7 +63,7 @@ const App: React.FC = () => {
           React Sigma <span className="text-indigo-600">Chatbox</span>
         </h1>
         <p className="text-lg text-slate-500 max-w-xl mx-auto">
-          Demo thư viện UI Chatbox. Hãy xem <strong>README.md</strong> để biết cách viết AI Service cho dự án của bạn.
+          Demo thư viện UI Chatbox hỗ trợ **Markdown** và **Streaming**.
         </p>
       </div>
 

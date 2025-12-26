@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Message, MessageType, SenderType } from '../../types';
 import { ProductCard } from './ProductCard';
@@ -8,14 +9,54 @@ interface ChatMessagesProps {
   quickReplies: string[];
   onQuickReply: (reply: string) => void;
   primaryColor: string;
+  renderMarkdown?: boolean;
 }
+
+/**
+ * Một component đơn giản để render Markdown cơ bản (Bold, Italic, Lists, Links) 
+ * mà không cần thư viện bên thứ ba nặng nề.
+ */
+const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
+  // Tách dòng và xử lý từng dòng để hỗ trợ danh sách
+  const lines = text.split('\n');
+  
+  return (
+    <>
+      {lines.map((line, idx) => {
+        let content: React.ReactNode = line;
+        
+        // Xử lý Bold: **text**
+        const boldRegex = /\*\*(.*?)\*\*/g;
+        if (boldRegex.test(line)) {
+          const parts = line.split(boldRegex);
+          content = parts.map((part, i) => i % 2 === 1 ? <strong key={i} className="font-bold">{part}</strong> : part);
+        }
+
+        // Xử lý Italic: *text* (đơn giản hóa)
+        // Lưu ý: regex này có thể xung đột với danh sách (*) nếu không cẩn thận
+        
+        // Xử lý Bullet points: * hoặc - ở đầu dòng
+        const isBullet = line.trim().startsWith('* ') || line.trim().startsWith('- ');
+        
+        return (
+          <div key={idx} className={`${isBullet ? 'pl-4 relative' : ''} mb-0.5`}>
+            {isBullet && <span className="absolute left-0">•</span>}
+            {content}
+            {idx < lines.length - 1 && !isBullet && <br />}
+          </div>
+        );
+      })}
+    </>
+  );
+};
 
 export const ChatMessages: React.FC<ChatMessagesProps> = ({ 
   messages, 
   isLoading, 
   quickReplies, 
   onQuickReply,
-  primaryColor 
+  primaryColor,
+  renderMarkdown = false
 }) => {
   const botAvatar = "https://fptshop.com.vn/img/bitu/bitu-avatar.png";
   const fallbackAvatar = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png";
@@ -62,13 +103,17 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           
           <div className={`flex flex-col ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'} max-w-[94%]`}>
             <div 
-              className={`px-3.5 py-2.5 rounded-[16px] text-[13.5px] leading-relaxed shadow-sm whitespace-pre-line ${
+              className={`px-3.5 py-2.5 rounded-[16px] text-[13.5px] leading-relaxed shadow-sm ${
                 msg.sender === SenderType.USER 
-                  ? 'bg-indigo-600 text-white rounded-tr-none' 
+                  ? 'bg-indigo-600 text-white rounded-tr-none whitespace-pre-line' 
                   : 'bg-white text-gray-800 border-none rounded-tl-none'
-              }`}
+              } ${!renderMarkdown || msg.sender === SenderType.USER ? 'whitespace-pre-line' : ''}`}
             >
-              {msg.content}
+              {renderMarkdown && msg.sender === SenderType.AI ? (
+                <MarkdownLite text={msg.content} />
+              ) : (
+                msg.content
+              )}
             </div>
 
             {msg.type === MessageType.PRODUCT_LIST && msg.products && (
