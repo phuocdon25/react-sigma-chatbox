@@ -144,11 +144,15 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
     setIsExpanded(!isExpanded);
   };
 
+  // Cải tiến: 
+  // - Desktop: Anchor bottom-6 giống FloatingButton, offset right-24 (96px) để nằm cạnh icon.
+  // - Mobile: Anchor right-4 (tràn cạnh) và bottom-20 để không che icon hoặc bottom-4 nếu muốn full.
+  // Ở đây chúng ta ưu tiên desktop side-by-side như yêu cầu.
   const chatContainerClasses = `
     fixed z-[99] overflow-hidden flex flex-col transition-all duration-300 ease-in-out border border-white/40 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] bg-[#fff] animate-chat-pop
     ${isExpanded 
-      ? 'bottom-4 right-4 md:bottom-6 md:right-6 w-[95vw] md:w-[850px] h-[92vh] md:h-[85vh] rounded-[32px]' 
-      : 'bottom-[88px] right-4 md:right-6 w-[92vw] md:w-[380px] h-[70vh] md:h-[580px] rounded-[28px]'
+      ? 'bottom-4 right-4 md:bottom-6 md:right-24 w-[95vw] md:w-[850px] h-[92vh] md:h-[85vh] rounded-[32px]' 
+      : 'bottom-4 right-4 md:bottom-6 md:right-24 w-[92vw] md:w-[380px] h-[70vh] md:h-[580px] rounded-[28px]'
     }
   `;
 
