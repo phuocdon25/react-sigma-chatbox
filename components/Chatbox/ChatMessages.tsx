@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Message, MessageType, SenderType } from '../../types';
 import { ProductCard } from './ProductCard';
@@ -12,23 +11,16 @@ interface ChatMessagesProps {
   renderMarkdown?: boolean;
 }
 
-/**
- * Xử lý chuỗi văn bản để tìm và chuyển đổi các định dạng nội dòng (Bold, Links) 
- * thành mảng các React Nodes.
- */
 const parseInlineMarkdown = (text: string): React.ReactNode[] => {
-  // Regex cho Bold (**text**) và Links ([text](url))
   const regex = /(\*\*.*?\*\*|\[.*?\]\(.*?\))/g;
   const parts = text.split(regex);
 
   return parts.map((part, i) => {
-    // Xử lý Bold: **text**
     if (part.startsWith('**') && part.endsWith('**')) {
       const content = part.slice(2, -2);
       return <strong key={i} className="font-bold text-gray-900">{content}</strong>;
     }
     
-    // Xử lý Link: [text](url)
     const linkMatch = part.match(/\[(.*?)\]\((.*?)\)/);
     if (linkMatch) {
       const [_, linkText, url] = linkMatch;
@@ -49,9 +41,6 @@ const parseInlineMarkdown = (text: string): React.ReactNode[] => {
   });
 };
 
-/**
- * Component render Markdown nâng cao hỗ trợ Headings, Lists, Links và Bold.
- */
 const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
   const lines = text.split('\n');
   
@@ -60,7 +49,6 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
       {lines.map((line, idx) => {
         const trimmedLine = line.trim();
         
-        // 1. Xử lý Headings: #, ##, ###
         const headerMatch = trimmedLine.match(/^(#{1,4})\s+(.*)$/);
         if (headerMatch) {
           const level = headerMatch[1].length;
@@ -71,7 +59,6 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
           return <div key={idx} className={className}>{parseInlineMarkdown(content)}</div>;
         }
 
-        // 2. Xử lý Bullet points: * hoặc - ở đầu dòng
         const bulletMatch = trimmedLine.match(/^[*+-]\s+(.*)$/);
         if (bulletMatch) {
           const content = bulletMatch[1];
@@ -83,12 +70,10 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
           );
         }
 
-        // 3. Dòng trống (newline)
         if (trimmedLine === '') {
           return <div key={idx} className="h-3" />;
         }
 
-        // 4. Văn bản bình thường
         return (
           <div key={idx} className="mb-1 leading-relaxed text-gray-800">
             {parseInlineMarkdown(line)}
@@ -111,8 +96,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
   const fallbackAvatar = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png";
 
   return (
-    <div className="flex flex-col gap-6 pb-4">
-      {/* Hero Section */}
+    <div className="flex flex-col gap-8 pb-4">
       <div className="flex flex-col items-center justify-center py-8 text-center animate-msg">
         <div className="relative mb-5">
           <div className="w-24 h-24 flex items-center justify-center">
@@ -127,7 +111,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         <h2 className="text-xl font-bold text-[#1a2b56] flex items-center justify-center gap-1">
           Sigma <span className="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-md leading-none ml-1 uppercase font-bold tracking-tight">AI</span>
         </h2>
-        <div className="text-[13.5px] text-gray-600 mt-3 leading-relaxed px-4">
+        <div className="text-[14px] text-gray-600 mt-3 leading-relaxed px-4">
           <p><span className="font-bold text-gray-800">Sigma Assistant</span> hỗ trợ bạn mọi lúc mọi nơi</p>
           <p>Tăng cường hiệu suất với AI thông minh</p>
         </div>
@@ -140,7 +124,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           style={{ animationDelay: `${index * 0.05}s` }}
         >
           {msg.sender === SenderType.AI && (
-            <div className="flex items-center gap-1.5 mb-1.5 ml-1">
+            <div className="flex items-center gap-1.5 mb-2 ml-1">
                <img 
                 src={botAvatar} 
                 onError={(e) => (e.currentTarget.src = fallbackAvatar)}
@@ -155,7 +139,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             <div 
               className={`px-4 py-3 rounded-[18px] text-[14px] shadow-sm border border-black/[0.03] ${
                 msg.sender === SenderType.USER 
-                  ? 'bg-indigo-600 text-white rounded-tr-none whitespace-pre-line' 
+                  ? 'bg-indigo-600 text-white rounded-tr-none whitespace-pre-line shadow-indigo-100' 
                   : 'bg-white text-gray-800 border-none rounded-tl-none'
               } ${!renderMarkdown || msg.sender === SenderType.USER ? 'whitespace-pre-line' : ''}`}
             >
@@ -167,7 +151,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             </div>
 
             {msg.type === MessageType.PRODUCT_LIST && msg.products && (
-              <div className="w-full mt-4 flex gap-3.5 overflow-x-auto pb-4 pt-1 no-scrollbar snap-x">
+              <div className="w-full mt-4 flex gap-4 overflow-x-auto pb-4 pt-1 no-scrollbar snap-x">
                 {msg.products.map(product => (
                   <div key={product.id} className="product-card-snap">
                     <ProductCard product={product} primaryColor={primaryColor} />
@@ -177,7 +161,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             )}
 
             {index === 0 && messages.length === 1 && msg.sender === SenderType.AI && (
-              <div className="mt-4 flex flex-wrap gap-2 w-full">
+              <div className="mt-5 flex flex-wrap gap-2.5 w-full">
                 {quickReplies.map((reply, i) => (
                   <button
                     key={i}

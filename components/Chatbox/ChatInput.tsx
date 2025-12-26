@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 interface ChatInputProps {
@@ -34,6 +33,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ placeholder, onSendMessage
           placeholder={placeholder}
           rows={1}
           className="w-full bg-transparent border-none outline-none focus:ring-0 text-[14px] text-gray-700 font-normal py-3 px-1 resize-none chat-scrollbar min-h-[44px] max-h-[120px] leading-relaxed placeholder:text-gray-400"
+          style={{ fontWeight: 400 }}
         />
         <button 
           onClick={handleSend}
