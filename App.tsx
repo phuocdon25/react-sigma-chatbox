@@ -15,21 +15,11 @@ const App: React.FC = () => {
   };
 
   /**
-   * Rút gọn handleAiResponse: 
-   * Trả về một đoạn text đơn giản mô phỏng quá trình AI đang suy nghĩ và trả lời.
+   * handleAiResponse đơn giản: Trả về một chuỗi text mẫu sau 1 giây.
    */
-  const handleAiResponse = async function* (userInput: string) {
-    const responses = [
-      "Chào bạn! Tôi đã nhận được câu hỏi: **\"" + userInput + "\"**. ",
-      "Đây là một ví dụ về phản hồi từ Sigma AI. ",
-      "Thư viện Chatbox này hỗ trợ hiển thị **Markdown**, *Product Carousel* và hiệu ứng *Streaming* mượt mà. ",
-      "Bạn có thể tùy chỉnh màu sắc, tên bot và các câu trả lời nhanh một cách dễ dàng!"
-    ];
-    
-    for (const chunk of responses) {
-      await new Promise(r => setTimeout(r, 400)); // Giả lập độ trễ AI
-      yield chunk;
-    }
+  const handleAiResponse = async (userInput: string) => {
+    await new Promise(r => setTimeout(r, 1000));
+    return `Cảm ơn bạn đã quan tâm! Đây là câu trả lời mẫu cho nội dung: "**${userInput}**". Thư viện Sigma Chatbox hỗ trợ đầy đủ Markdown và Product Carousel.`;
   };
 
   return (

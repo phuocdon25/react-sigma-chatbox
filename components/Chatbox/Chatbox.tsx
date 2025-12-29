@@ -8,12 +8,13 @@ import { FloatingButton } from './FloatingButton.tsx';
 
 interface ChatboxProps {
   config: ChatboxConfig;
-  onGetAiResponse: AiResponseHandler; // Bắt buộc để library hoạt động
+  onGetAiResponse: AiResponseHandler;
 }
 
 export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -25,6 +26,17 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const activeRequestId = useRef(0);
+
+  // Kích hoạt transition sau khi chatbox đã mount lần đầu để tránh lỗi slide ngang
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => setIsReady(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setIsReady(false);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (scrollRef.current && isOpen) {
@@ -35,6 +47,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
   const handleSendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
 
+    const requestId = ++activeRequestId.current;
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       type: MessageType.TEXT,
@@ -46,15 +59,6 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
 
-    const aiMsgId = `ai-${Date.now()}`;
-    const initialAiMsg: Message = {
-      id: aiMsgId,
-      type: MessageType.TEXT,
-      sender: SenderType.AI,
-      content: '',
-      timestamp: new Date()
-    };
-
     try {
       const responseResult = onGetAiResponse(text, messages);
       
@@ -62,10 +66,20 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
       if (responseResult && typeof responseResult === 'object' && Symbol.asyncIterator in responseResult) {
         let fullContent = '';
         let hasStarted = false;
+        const aiMsgId = `ai-${Date.now()}`;
 
         for await (const chunk of (responseResult as AsyncGenerator<string>)) {
+          // Nếu requestId đã thay đổi (do reset), dừng xử lý
+          if (requestId !== activeRequestId.current) return;
+
           if (!hasStarted) {
-            setMessages(prev => [...prev, initialAiMsg]);
+            setMessages(prev => [...prev, {
+              id: aiMsgId,
+              type: MessageType.TEXT,
+              sender: SenderType.AI,
+              content: '',
+              timestamp: new Date()
+            }]);
             setIsLoading(false);
             hasStarted = true;
           }
@@ -78,36 +92,38 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
       // Xử lý Promise (Static Response)
       else {
         const response = await responseResult;
+        if (requestId !== activeRequestId.current) return;
+
         setIsLoading(false);
-        
         const finalData = typeof response === 'string' 
           ? { text: response, products: undefined } 
           : (response as { text: string; products?: Product[] });
           
-        const finalAiMsg: Message = {
-          ...initialAiMsg,
+        setMessages(prev => [...prev, {
+          id: `ai-${Date.now()}`,
+          type: finalData.products ? MessageType.PRODUCT_LIST : MessageType.TEXT,
+          sender: SenderType.AI,
           content: finalData.text,
           products: finalData.products,
-          type: finalData.products ? MessageType.PRODUCT_LIST : MessageType.TEXT
-        };
-        setMessages(prev => [...prev, finalAiMsg]);
+          timestamp: new Date()
+        }]);
       }
     } catch (err) {
-      console.error("Chatbox Logic Error:", err);
+      if (requestId !== activeRequestId.current) return;
+      console.error("Chatbox Error:", err);
       setIsLoading(false);
       setMessages(prev => [...prev, {
         id: `err-${Date.now()}`,
         type: MessageType.TEXT,
         sender: SenderType.AI,
-        content: "Hệ thống đang bận, vui lòng thử lại sau giây lát.",
+        content: "Hệ thống đang bận, vui lòng thử lại sau.",
         timestamp: new Date()
       }]);
     }
   };
 
-  const handleQuickReply = (reply: string) => handleSendMessage(reply);
-
   const handleResetChat = () => {
+    activeRequestId.current++; // Hủy các request đang chạy
     setMessages([{
       id: 'welcome',
       type: MessageType.TEXT,
@@ -115,18 +131,13 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
       content: config.welcomeMessage,
       timestamp: new Date()
     }]);
-    setIsLoading(false); // Fix: Đảm bảo dừng loading khi reset
-    setIsExpanded(false); // Reset luôn trạng thái mở rộng nếu cần
+    setIsLoading(false);
+    setIsExpanded(false);
   };
 
-  /**
-   * Fix Animation:
-   * Loại bỏ 'transition-all' vì nó gây ra hiệu ứng lướt ngang khi mount tọa độ fixed.
-   * Chỉ transition các thuộc tính thay đổi khi phóng to (width, height, border-radius).
-   */
   const chatClasses = `
     fixed z-[99] overflow-hidden flex flex-col border border-white/40 shadow-2xl bg-white animate-chat-pop
-    transition-[width,height,border-radius] duration-300 ease-in-out
+    ${isReady ? 'transition-[width,height,border-radius,right,bottom] duration-300 ease-in-out' : ''}
     ${isExpanded 
       ? 'bottom-0 right-0 w-full h-full md:bottom-6 md:right-28 md:w-[850px] md:h-[85vh] rounded-none md:rounded-[32px]' 
       : 'bottom-0 right-0 w-full h-[80vh] md:bottom-6 md:right-28 md:w-[380px] md:h-[580px] rounded-t-[28px] md:rounded-[28px]'
@@ -143,7 +154,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
       />
 
       {isOpen && (
-        <div className={chatClasses}>
+        <div className={chatClasses} style={{ left: 'auto' }}>
           <ChatHeader 
             title={config.botName} 
             primaryColor={config.primaryColor} 
@@ -153,15 +164,12 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
             isExpanded={isExpanded}
           />
 
-          <div 
-            className="flex-1 overflow-y-auto chat-scrollbar px-5 py-5 bg-slate-50/30" 
-            ref={scrollRef}
-          >
+          <div className="flex-1 overflow-y-auto chat-scrollbar px-5 py-5 bg-slate-50/30" ref={scrollRef}>
              <ChatMessages 
                 messages={messages} 
                 isLoading={isLoading} 
                 quickReplies={config.quickReplies}
-                onQuickReply={handleQuickReply}
+                onQuickReply={(reply) => handleSendMessage(reply)}
                 primaryColor={config.primaryColor}
                 renderMarkdown={config.renderMarkdown}
               />
