@@ -1,75 +1,85 @@
 
 import React from 'react';
-import { Chatbox } from './components/Chatbox/Chatbox';
-import { ChatboxConfig, Product } from './types';
-import './style.css';
+import { Chatbox } from './components/Chatbox/Chatbox.tsx';
+import { ChatboxConfig } from './types.ts';
 
 const App: React.FC = () => {
   const config: ChatboxConfig = {
-    primaryColor: '#6366f1',
+    primaryColor: '#ef4444',
     botName: 'Sigma Expert AI',
-    welcomeMessage: 'Chào bạn! Thử gõ "iphone" để xem danh sách sản phẩm hoặc hỏi bất cứ điều gì khác.',
-    placeholder: 'Nhập câu hỏi của bạn...',
+    welcomeMessage: 'Chào bạn! Tôi là trợ lý AI Sigma. Thử gõ "iphone" để xem demo sản phẩm nhé!',
+    placeholder: 'Nhập tin nhắn để bắt đầu chat...',
     avatarUrl: 'https://fptshop.com.vn/img/bitu/bitu-avatar.png',
-    quickReplies: ['Tư vấn iPhone 15', 'Giảm giá hôm nay', 'Kể chuyện vui'],
-    renderMarkdown: true // Bật tính năng render Markdown
+    quickReplies: ['Giá iPhone 15 Pro Max', 'Khuyến mãi tháng này', 'So sánh Laptop Gaming'],
+    renderMarkdown: true 
   };
 
-  /**
-   * HÀM GIẢ LẬP (MOCK AI HANDLER)
-   */
-  const handleAiInteraction = async function* (userInput: string) {
+  const handleAiResponse = async function* (userInput: string) {
     const query = userInput.toLowerCase();
 
-    // 1. Giả lập trả về Sản phẩm
-    if (query.includes('iphone')) {
-      const mockProducts: Product[] = [
-        {
-          id: 'ip15',
-          name: 'iPhone 15 Pro Max 256GB',
-          price: '29.490.000₫',
-          discount: '-15%',
-          image: 'https://images.fpt.shop/unsafe/fit-in/214x214/filters:quality(90):fill(white)/fptshop.com.vn/Uploads/Originals/2023/9/13/638302096701832135_iphone-15-pro-max-gold-1.jpg',
-          description: 'Khung viền Titan siêu bền.'
-        }
-      ];
-      
+    if (query.includes('iphone') || query.includes('giá')) {
       return {
-        text: "Dạ, đây là các dòng **iPhone** đang có giá tốt nhất ạ:",
-        products: mockProducts
+        text: "Dạ, Sigma AI xin gửi bạn bảng giá tham khảo các dòng **iPhone** mới nhất ạ:",
+        products: [
+          {
+            id: 'ip15pm',
+            name: 'iPhone 15 Pro Max 256GB Titanium',
+            price: '29.990.000₫',
+            oldPrice: '34.990.000₫',
+            discount: '-14%',
+            image: 'https://images.fpt.shop/unsafe/fit-in/214x214/filters:quality(90):fill(white)/fptshop.com.vn/Uploads/Originals/2023/9/13/638302096701832135_iphone-15-pro-max-gold-1.jpg',
+            description: 'Khung viền Titan siêu bền.'
+          },
+          {
+            id: 'ip15p',
+            name: 'iPhone 15 Pro 128GB',
+            price: '24.590.000₫',
+            oldPrice: '28.990.000₫',
+            discount: '-15%',
+            image: 'https://images.fpt.shop/unsafe/fit-in/214x214/filters:quality(90):fill(white)/fptshop.com.vn/Uploads/Originals/2023/9/13/638302143431057476_iphone-15-pro-black-1.jpg',
+            description: 'Chip A17 Pro mạnh mẽ.'
+          }
+        ]
       };
     }
 
-    // 2. Giả lập hiệu ứng gõ chữ (Streaming) với Markdown
-    const chunks = [
-      "Chào bạn, tôi là **Sigma AI**. ",
-      "\n\nTôi có thể giúp bạn:",
-      "\n* Tìm kiếm sản phẩm công nghệ.",
-      "\n* Tư vấn cấu hình máy tính.",
-      "\n* Cung cấp mã giảm giá mới nhất.",
-      "\n\nBạn cần hỗ trợ gì thêm không ạ?"
-    ];
-
-    for (const text of chunks) {
-      await new Promise(r => setTimeout(r, 300));
-      yield text;
+    const responseText = "Cảm ơn bạn đã quan tâm. Sigma AI đang xử lý yêu cầu của bạn. Tôi có thể hỗ trợ bạn tìm sản phẩm hoặc tra cứu khuyến mãi nhanh chóng.";
+    const words = responseText.split(' ');
+    
+    for (const word of words) {
+      await new Promise(r => setTimeout(r, 60));
+      yield word + ' ';
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 font-sans">
-      <div className="max-w-4xl w-full text-center space-y-6">
-        <h1 className="text-6xl font-black text-slate-900 tracking-tighter">
-          React Sigma <span className="text-indigo-600">Chatbox</span>
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-slate-900">
+      <div className="max-w-3xl w-full text-center space-y-4 mb-12">
+        <h1 className="text-4xl md:text-6xl font-black tracking-tight">
+          Sigma <span className="text-red-500">Chatbox</span> UI
         </h1>
-        <p className="text-lg text-slate-500 max-w-xl mx-auto">
-          Demo thư viện UI Chatbox hỗ trợ **Markdown** và **Streaming**.
+        <p className="text-slate-500 text-lg">
+          Thư viện chatbox chuẩn React 19, hỗ trợ Markdown và Product Carousel.
         </p>
       </div>
 
+      <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 max-w-2xl w-full text-center">
+        <p className="text-slate-600 mb-6 font-medium">Nhấn vào icon chat ở góc phải màn hình để bắt đầu.</p>
+        <div className="flex justify-center gap-6">
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
+            <i className="fa-solid fa-bolt text-yellow-500"></i>
+            Fast Performance
+          </div>
+          <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
+            <i className="fa-solid fa-layer-group text-blue-500"></i>
+            Easy Integration
+          </div>
+        </div>
+      </div>
+      
       <Chatbox 
         config={config} 
-        onGetAiResponse={handleAiInteraction as any} 
+        onGetAiResponse={handleAiResponse as any} 
       />
     </div>
   );

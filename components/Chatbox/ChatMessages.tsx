@@ -1,6 +1,7 @@
+
 import React from 'react';
-import { Message, MessageType, SenderType } from '../../types';
-import { ProductCard } from './ProductCard';
+import { Message, MessageType, SenderType } from '../../types.ts';
+import { ProductCard } from './ProductCard.tsx';
 
 interface ChatMessagesProps {
   messages: Message[];

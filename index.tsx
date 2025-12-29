@@ -1,5 +1,3 @@
 
-import './style.css';
-
-export * from './components/Chatbox/Chatbox';
-export * from './types';
+export * from './components/Chatbox/Chatbox.tsx';
+export * from './types.ts';
