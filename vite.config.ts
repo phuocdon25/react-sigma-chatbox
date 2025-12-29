@@ -1,4 +1,3 @@
-
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
@@ -32,13 +31,12 @@ export default defineConfig({
           'react-dom': 'ReactDOM',
           '@google/genai': 'GoogleGenAI'
         },
-        // Đổi tên file CSS đầu ra thành react-sigma-chatbox.css
         assetFileNames: (assetInfo) => {
           if (assetInfo.name && assetInfo.name.endsWith('.css')) return 'react-sigma-chatbox.css';
           return assetInfo.name || 'assets/[name]-[hash][extname]';
         }
       }
     },
-    cssCodeSplit: false // Gộp toàn bộ CSS vào 1 file duy nhất
+    cssCodeSplit: false
   }
 });
