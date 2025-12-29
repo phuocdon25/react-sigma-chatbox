@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatboxConfig, Message, MessageType, SenderType, AiResponseHandler, Product } from '../../types.ts';
 import { ChatHeader } from './ChatHeader.tsx';
@@ -76,7 +77,6 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
       } 
       // Xử lý Promise (Static Response)
       else {
-        // Fix: Explicitly narrow the response type after await to resolve TS property access errors
         const response = await responseResult;
         setIsLoading(false);
         
@@ -107,8 +107,26 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
 
   const handleQuickReply = (reply: string) => handleSendMessage(reply);
 
+  const handleResetChat = () => {
+    setMessages([{
+      id: 'welcome',
+      type: MessageType.TEXT,
+      sender: SenderType.AI,
+      content: config.welcomeMessage,
+      timestamp: new Date()
+    }]);
+    setIsLoading(false); // Fix: Đảm bảo dừng loading khi reset
+    setIsExpanded(false); // Reset luôn trạng thái mở rộng nếu cần
+  };
+
+  /**
+   * Fix Animation:
+   * Loại bỏ 'transition-all' vì nó gây ra hiệu ứng lướt ngang khi mount tọa độ fixed.
+   * Chỉ transition các thuộc tính thay đổi khi phóng to (width, height, border-radius).
+   */
   const chatClasses = `
-    fixed z-[99] overflow-hidden flex flex-col transition-all duration-300 ease-in-out border border-white/40 shadow-2xl bg-white animate-chat-pop
+    fixed z-[99] overflow-hidden flex flex-col border border-white/40 shadow-2xl bg-white animate-chat-pop
+    transition-[width,height,border-radius] duration-300 ease-in-out
     ${isExpanded 
       ? 'bottom-0 right-0 w-full h-full md:bottom-6 md:right-28 md:w-[850px] md:h-[85vh] rounded-none md:rounded-[32px]' 
       : 'bottom-0 right-0 w-full h-[80vh] md:bottom-6 md:right-28 md:w-[380px] md:h-[580px] rounded-t-[28px] md:rounded-[28px]'
@@ -130,13 +148,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
             title={config.botName} 
             primaryColor={config.primaryColor} 
             onClose={() => setIsOpen(false)}
-            onReset={() => setMessages([{
-              id: 'welcome',
-              type: MessageType.TEXT,
-              sender: SenderType.AI,
-              content: config.welcomeMessage,
-              timestamp: new Date()
-            }])}
+            onReset={handleResetChat}
             onToggleExpand={() => setIsExpanded(!isExpanded)}
             isExpanded={isExpanded}
           />
