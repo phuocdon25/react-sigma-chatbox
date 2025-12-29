@@ -32,9 +32,9 @@ export default defineConfig({
           'react-dom': 'ReactDOM',
           '@google/genai': 'GoogleGenAI'
         },
-        // Đảm bảo CSS được đặt tên cố định
+        // Đổi tên file CSS đầu ra thành react-sigma-chatbox.css
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name === 'style.css') return 'style.css';
+          if (assetInfo.name && assetInfo.name.endsWith('.css')) return 'react-sigma-chatbox.css';
           return assetInfo.name || 'assets/[name]-[hash][extname]';
         }
       }

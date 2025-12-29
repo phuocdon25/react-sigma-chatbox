@@ -23,7 +23,7 @@ If you have cloned this repository and want to run the demo or continue developm
     ```bash
     npm run build
     ```
-    This generates the `dist` folder containing the compiled library (`index.mjs`, `index.js`) and the bundled CSS (`style.css`).
+    This generates the `dist` folder containing the compiled library (`index.mjs`, `index.js`) and the bundled CSS (`react-sigma-chatbox.css`).
 
 ---
 
@@ -40,7 +40,7 @@ You can use the library in your other local projects before it's published to NP
 Copy the `dist` folder directly into your project and import from it.
 
 ### 2. Tailwind CSS Configuration
-To ensure the chatbox styles are correctly applied in your target project, update your `tailwind.config.js`. Use the following configuration which is verified to work:
+To ensure the chatbox styles are correctly applied in your target project, update your `tailwind.config.js`:
 
 ```javascript
 /** @type {import('tailwindcss').Config} */
@@ -59,7 +59,7 @@ export default {
 ### 3. Import Styles
 Import the library's stylesheet in your entry file (e.g., `main.tsx` or `App.tsx`):
 ```typescript
-import 'react-sigma-chatbox/dist/style.css';
+import 'react-sigma-chatbox/dist/react-sigma-chatbox.css';
 ```
 
 ---
@@ -78,7 +78,6 @@ const config = {
 };
 
 const handleSimpleAi = async (userInput: string) => {
-  // If renderMarkdown is true, this will show "Hello" in bold
   return "Hello! I am your **AI assistant**. How can I help you today?";
 };
 
@@ -86,17 +85,11 @@ const handleSimpleAi = async (userInput: string) => {
 ```
 
 ### Option 2: Streaming Response (Async Generator)
-Use this for real-time "typing" effects. Markdown is supported within streams as well.
+Use this for real-time "typing" effects.
 
 ```tsx
 async function* handleStreamingAi(userInput: string) {
-  const chunks = [
-    "Hello there! ", 
-    "I am **Sigma AI**. ", 
-    "\n\nI can help you with:",
-    "\n* Finding products",
-    "\n* Price comparisons"
-  ];
+  const chunks = ["Hello! ", "I am **Sigma AI**. ", "How can I help?"];
   for (const chunk of chunks) {
     await new Promise(r => setTimeout(r, 150));
     yield chunk;
@@ -107,24 +100,20 @@ async function* handleStreamingAi(userInput: string) {
 ```
 
 ### Option 3: Product Carousel Response
-You can return an object containing both text (Markdown supported) and an array of products.
 ```tsx
 const handleProductSearch = async (userInput: string) => {
-  if (userInput.toLowerCase().includes("iphone")) {
-    return {
-      text: "Check out our latest **iPhone** models:",
-      products: [
-        {
-          id: 'ip15',
-          name: 'iPhone 15 Pro Max',
-          price: '29.990.000₫',
-          image: 'https://example.com/iphone15.jpg',
-          description: 'The ultimate iPhone.'
-        }
-      ]
-    };
-  }
-  return "Sorry, I couldn't find that product.";
+  return {
+    text: "Check out our latest **iPhone** models:",
+    products: [
+      {
+        id: 'ip15',
+        name: 'iPhone 15 Pro Max',
+        price: '29.990.000₫',
+        image: 'https://fptshop.com.vn/img/products/iphone-15-pro-max.png',
+        description: 'The ultimate iPhone.'
+      }
+    ]
+  };
 };
 ```
 
@@ -136,18 +125,18 @@ const handleProductSearch = async (userInput: string) => {
 | Prop | Type | Description |
 | :--- | :--- | :--- |
 | `config` | `ChatboxConfig` | Object containing UI branding and initial messages. |
-| `onGetAiResponse` | `Function` | (Optional) Logic handler. If omitted, it defaults to the built-in Gemini logic. |
+| `onGetAiResponse` | `Function` | Logic handler (Promise or AsyncGenerator). |
 
 ### ChatboxConfig Fields
 | Field | Type | Description |
 | :--- | :--- | :--- |
-| `primaryColor` | `string` | Hex color used for buttons, user bubbles, and accents. |
-| `botName` | `string` | The display name shown in the chat header. |
-| `welcomeMessage` | `string` | The initial message sent by the bot. |
-| `placeholder` | `string` | Text displayed in the input field when empty. |
+| `primaryColor` | `string` | Hex color used for accents and user bubbles. |
+| `botName` | `string` | The display name shown in the header. |
+| `welcomeMessage` | `string` | Initial message sent by the bot. |
+| `placeholder` | `string` | Input field placeholder. |
 | `avatarUrl` | `string` | URL for the bot icon. |
-| `quickReplies` | `string[]` | Buttons that appear below the welcome message for one-tap answers. |
-| `renderMarkdown` | `boolean` | (Optional) If `true`, enables basic Markdown support (Bold, Lists) for AI messages. |
+| `quickReplies` | `string[]` | One-tap answer buttons. |
+| `renderMarkdown` | `boolean` | Enable Markdown support for AI messages. |
 
 ---
 
