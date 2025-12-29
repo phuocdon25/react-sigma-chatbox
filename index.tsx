@@ -1,3 +1,3 @@
 
-export * from './components/Chatbox/Chatbox.tsx';
-export * from './types.ts';
+export * from './components/Chatbox/Chatbox';
+export * from './types';

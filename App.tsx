@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Chatbox } from './components/Chatbox/Chatbox.tsx';
-import { ChatboxConfig } from './types.ts';
+import { Chatbox } from './components/Chatbox/Chatbox';
+import { ChatboxConfig } from './types';
 
 const App: React.FC = () => {
   const config: ChatboxConfig = {

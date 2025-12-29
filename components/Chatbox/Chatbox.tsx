@@ -1,10 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { ChatboxConfig, Message, MessageType, SenderType, AiResponseHandler, Product } from '../../types.ts';
-import { ChatHeader } from './ChatHeader.tsx';
-import { ChatMessages } from './ChatMessages.tsx';
-import { ChatInput } from './ChatInput.tsx';
-import { FloatingButton } from './FloatingButton.tsx';
+import { ChatboxConfig, Message, MessageType, SenderType, AiResponseHandler, Product } from '../../types';
+import { ChatHeader } from './ChatHeader';
+import { ChatMessages } from './ChatMessages';
+import { ChatInput } from './ChatInput';
+import { FloatingButton } from './FloatingButton';
 
 interface ChatboxProps {
   config: ChatboxConfig;
