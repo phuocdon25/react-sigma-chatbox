@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { ChatboxConfig, Message, MessageType, SenderType, AiResponseHandler, Product } from '../../types';
 import { ChatHeader } from './ChatHeader';
@@ -11,10 +10,14 @@ interface ChatboxProps {
   onGetAiResponse: AiResponseHandler;
 }
 
+// Helper to generate random thread ID
+const generateThreadId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
 export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [threadId, setThreadId] = useState(generateThreadId());
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -60,7 +63,8 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
     setIsLoading(true);
 
     try {
-      const responseResult = onGetAiResponse(text, messages);
+      // Pass the threadId to the handler instead of full history
+      const responseResult = onGetAiResponse(text, threadId);
       
       // Xử lý Streaming (Async Generator)
       if (responseResult && typeof responseResult === 'object' && Symbol.asyncIterator in responseResult) {
@@ -69,7 +73,6 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
         const aiMsgId = `ai-${Date.now()}`;
 
         for await (const chunk of (responseResult as AsyncGenerator<string>)) {
-          // Nếu requestId đã thay đổi (do reset), dừng xử lý
           if (requestId !== activeRequestId.current) return;
 
           if (!hasStarted) {
@@ -124,6 +127,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
 
   const handleResetChat = () => {
     activeRequestId.current++; // Hủy các request đang chạy
+    setThreadId(generateThreadId()); // Tạo threadId mới ngẫu nhiên
     setMessages([{
       id: 'welcome',
       type: MessageType.TEXT,

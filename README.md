@@ -66,7 +66,7 @@ import 'react-sigma-chatbox/dist/react-sigma-chatbox.css';
 
 ## 🛠 Basic & Streaming Usage
 
-The `Chatbox` component is highly flexible and can handle both standard Promises and Async Generators (for streaming).
+The `Chatbox` component is highly flexible and handles logic through a `threadId` (unique session ID) which changes whenever the chat is reset.
 
 ### Option 1: Standard Text Response (Plain Text or Markdown)
 You can choose to render responses as plain text (default) or basic Markdown (Bold, Lists, etc.).
@@ -77,7 +77,9 @@ const config = {
   renderMarkdown: true // Set to true to enable Markdown rendering
 };
 
-const handleSimpleAi = async (userInput: string) => {
+// Handler now receives (userInput, threadId)
+const handleSimpleAi = async (userInput: string, threadId: string) => {
+  console.log(`Session ID: ${threadId}`);
   return "Hello! I am your **AI assistant**. How can I help you today?";
 };
 
@@ -88,7 +90,7 @@ const handleSimpleAi = async (userInput: string) => {
 Use this for real-time "typing" effects.
 
 ```tsx
-async function* handleStreamingAi(userInput: string) {
+async function* handleStreamingAi(userInput: string, threadId: string) {
   const chunks = ["Hello! ", "I am **Sigma AI**. ", "How can I help?"];
   for (const chunk of chunks) {
     await new Promise(r => setTimeout(r, 150));
@@ -100,8 +102,9 @@ async function* handleStreamingAi(userInput: string) {
 ```
 
 ### Option 3: Product Carousel Response
+You can return an object containing products to show a carousel.
 ```tsx
-const handleProductSearch = async (userInput: string) => {
+const handleProductSearch = async (userInput: string, threadId: string) => {
   return {
     text: "Check out our latest **iPhone** models:",
     products: [
@@ -125,7 +128,7 @@ const handleProductSearch = async (userInput: string) => {
 | Prop | Type | Description |
 | :--- | :--- | :--- |
 | `config` | `ChatboxConfig` | Object containing UI branding and initial messages. |
-| `onGetAiResponse` | `Function` | Logic handler (Promise or AsyncGenerator). |
+| `onGetAiResponse` | `AiResponseHandler` | Logic handler receiving `(userInput, threadId)`. |
 
 ### ChatboxConfig Fields
 | Field | Type | Description |

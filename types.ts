@@ -1,4 +1,3 @@
-
 export enum MessageType {
   TEXT = 'text',
   PRODUCT_LIST = 'product_list',
@@ -45,9 +44,9 @@ export interface ChatboxConfig {
 
 /**
  * Flexible handler for AI responses.
- * Can return a simple string (Promise) or an AsyncGenerator for streaming.
+ * Now receives threadId (random string) to manage conversation sessions.
  */
 export type AiResponseHandler = (
   userInput: string, 
-  history: Message[]
+  threadId: string
 ) => Promise<string | { text: string; products?: Product[] }> | AsyncGenerator<string>;

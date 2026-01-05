@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Chatbox } from './components/Chatbox/Chatbox';
 import { ChatboxConfig } from './types';
@@ -15,11 +14,11 @@ const App: React.FC = () => {
   };
 
   /**
-   * handleAiResponse đơn giản: Trả về một chuỗi text mẫu sau 1 giây.
+   * handleAiResponse giờ nhận threadId ngẫu nhiên từ component
    */
-  const handleAiResponse = async (userInput: string) => {
+  const handleAiResponse = async (userInput: string, threadId: string) => {
     await new Promise(r => setTimeout(r, 1000));
-    return `Cảm ơn bạn đã quan tâm! Đây là câu trả lời mẫu cho nội dung: "**${userInput}**". Thư viện Sigma Chatbox hỗ trợ đầy đủ Markdown và Product Carousel.`;
+    return `Cảm ơn bạn! Thread ID hiện tại là: \`${threadId}\`. Câu trả lời cho: "**${userInput}**". Thử nhấn nút reload ở góc trên để thấy thread ID thay đổi.`;
   };
 
   return (
@@ -29,7 +28,7 @@ const App: React.FC = () => {
           Sigma <span className="text-red-500">Chatbox</span> UI
         </h1>
         <p className="text-slate-500 text-lg">
-          Thư viện chatbox chuẩn React 19, tối ưu hiệu suất và thẩm mỹ.
+          Thư viện chatbox chuẩn React 19 với quản lý session (Thread ID).
         </p>
       </div>
 
@@ -37,12 +36,12 @@ const App: React.FC = () => {
         <p className="text-slate-600 mb-6 font-medium">Nhấn vào icon chat ở góc phải màn hình để bắt đầu trải nghiệm.</p>
         <div className="flex justify-center gap-6">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
-            <i className="fa-solid fa-bolt text-yellow-500"></i>
-            Fast Performance
+            <i className="fa-solid fa-code text-indigo-500"></i>
+            Session Tracking
           </div>
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
-            <i className="fa-solid fa-layer-group text-blue-500"></i>
-            Customizable
+            <i className="fa-solid fa-bolt text-yellow-500"></i>
+            Real-time
           </div>
         </div>
       </div>
