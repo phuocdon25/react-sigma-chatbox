@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChatboxConfig, Message, MessageType, SenderType, AiResponseHandler, Product } from '../../types';
+import { ChatboxConfig, Message, MessageType, SenderType, AiResponseHandler, Product, Language } from '../../types';
 import { ChatHeader } from './ChatHeader';
 import { ChatMessages } from './ChatMessages';
 import { ChatInput } from './ChatInput';
@@ -18,6 +18,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [threadId, setThreadId] = useState(generateThreadId());
+  const [language, setLanguage] = useState<Language>('en');
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -63,8 +64,8 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
     setIsLoading(true);
 
     try {
-      // Pass the threadId to the handler instead of full history
-      const responseResult = onGetAiResponse(text, threadId);
+      // Pass the threadId and language to the handler
+      const responseResult = onGetAiResponse(text, threadId, language);
       
       // Xử lý Streaming (Async Generator)
       if (responseResult && typeof responseResult === 'object' && Symbol.asyncIterator in responseResult) {
@@ -166,6 +167,8 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
             onReset={handleResetChat}
             onToggleExpand={() => setIsExpanded(!isExpanded)}
             isExpanded={isExpanded}
+            language={language}
+            onLanguageChange={setLanguage}
           />
 
           <div className="flex-1 overflow-y-auto chat-scrollbar px-5 py-5 bg-slate-50/30" ref={scrollRef}>

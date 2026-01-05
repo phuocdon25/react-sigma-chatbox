@@ -66,20 +66,26 @@ import 'react-sigma-chatbox/dist/react-sigma-chatbox.css';
 
 ## 🛠 Basic & Streaming Usage
 
-The `Chatbox` component is highly flexible and handles logic through a `threadId` (unique session ID) which changes whenever the chat is reset.
+The `Chatbox` component is highly flexible and handles logic through a `threadId` (unique session ID) and a `language` parameter (en, vi, ja). Both change or get passed whenever the user interacts with the UI.
 
 ### Option 1: Standard Text Response (Plain Text or Markdown)
 You can choose to render responses as plain text (default) or basic Markdown (Bold, Lists, etc.).
 
 ```tsx
+import { Language } from 'react-sigma-chatbox';
+
 const config = {
   // ... other config
   renderMarkdown: true // Set to true to enable Markdown rendering
 };
 
-// Handler now receives (userInput, threadId)
-const handleSimpleAi = async (userInput: string, threadId: string) => {
-  console.log(`Session ID: ${threadId}`);
+// Handler now receives (userInput, threadId, language)
+const handleSimpleAi = async (userInput: string, threadId: string, language: Language) => {
+  console.log(`Session ID: ${threadId}, Selected Language: ${language}`);
+  
+  if (language === 'vi') {
+    return "Xin chào! Tôi là **trợ lý AI**. Tôi có thể giúp gì cho bạn?";
+  }
   return "Hello! I am your **AI assistant**. How can I help you today?";
 };
 
@@ -90,8 +96,11 @@ const handleSimpleAi = async (userInput: string, threadId: string) => {
 Use this for real-time "typing" effects.
 
 ```tsx
-async function* handleStreamingAi(userInput: string, threadId: string) {
-  const chunks = ["Hello! ", "I am **Sigma AI**. ", "How can I help?"];
+async function* handleStreamingAi(userInput: string, threadId: string, language: Language) {
+  const chunks = language === 'ja' 
+    ? ["こんにちは！", "私は **Sigma AI** です。", "何かお手伝いしましょうか？"]
+    : ["Hello! ", "I am **Sigma AI**. ", "How can I help?"];
+    
   for (const chunk of chunks) {
     await new Promise(r => setTimeout(r, 150));
     yield chunk;
@@ -104,9 +113,9 @@ async function* handleStreamingAi(userInput: string, threadId: string) {
 ### Option 3: Product Carousel Response
 You can return an object containing products to show a carousel.
 ```tsx
-const handleProductSearch = async (userInput: string, threadId: string) => {
+const handleProductSearch = async (userInput: string, threadId: string, language: Language) => {
   return {
-    text: "Check out our latest **iPhone** models:",
+    text: language === 'vi' ? "Xem các mẫu **iPhone** mới nhất:" : "Check out our latest **iPhone** models:",
     products: [
       {
         id: 'ip15',
@@ -128,7 +137,7 @@ const handleProductSearch = async (userInput: string, threadId: string) => {
 | Prop | Type | Description |
 | :--- | :--- | :--- |
 | `config` | `ChatboxConfig` | Object containing UI branding and initial messages. |
-| `onGetAiResponse` | `AiResponseHandler` | Logic handler receiving `(userInput, threadId)`. |
+| `onGetAiResponse` | `AiResponseHandler` | Logic handler receiving `(userInput, threadId, language)`. |
 
 ### ChatboxConfig Fields
 | Field | Type | Description |

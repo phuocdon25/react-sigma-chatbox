@@ -1,4 +1,5 @@
 import React from 'react';
+import { Language } from '../../types';
 
 interface ChatHeaderProps {
   title: string;
@@ -7,6 +8,8 @@ interface ChatHeaderProps {
   onReset: () => void;
   onToggleExpand: () => void;
   isExpanded: boolean;
+  language: Language;
+  onLanguageChange: (lang: Language) => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({ 
@@ -15,8 +18,18 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   onClose, 
   onReset, 
   onToggleExpand,
-  isExpanded 
+  isExpanded,
+  language,
+  onLanguageChange
 }) => {
+  const languages: Language[] = ['en', 'vi', 'ja'];
+  
+  const cycleLanguage = () => {
+    const currentIndex = languages.indexOf(language);
+    const nextIndex = (currentIndex + 1) % languages.length;
+    onLanguageChange(languages[nextIndex]);
+  };
+
   return (
     <div 
       className="px-4 py-3 flex items-center justify-between border-b border-red-50/50 sticky top-0 z-10 bg-[#fff1f2]/90 backdrop-blur-sm"
@@ -35,7 +48,14 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
         </h3>
       </div>
       
-      <div className="flex items-center gap-2 text-gray-500">
+      <div className="flex items-center gap-1.5 text-gray-500">
+        <button 
+          onClick={cycleLanguage}
+          className="px-1.5 py-0.5 rounded-md hover:bg-white/60 transition-all text-[10px] font-black border border-gray-200 uppercase text-indigo-600 min-w-[32px] flex items-center justify-center bg-white/40"
+          title="Change language"
+        >
+          {language}
+        </button>
         <button 
           onClick={onReset} 
           className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/60 transition-all"

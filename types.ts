@@ -9,6 +9,8 @@ export enum SenderType {
   AI = 'ai'
 }
 
+export type Language = 'en' | 'vi' | 'ja';
+
 export interface Product {
   id: string;
   name: string;
@@ -44,9 +46,10 @@ export interface ChatboxConfig {
 
 /**
  * Flexible handler for AI responses.
- * Now receives threadId (random string) to manage conversation sessions.
+ * Receives threadId and selected language.
  */
 export type AiResponseHandler = (
   userInput: string, 
-  threadId: string
+  threadId: string,
+  language: Language
 ) => Promise<string | { text: string; products?: Product[] }> | AsyncGenerator<string>;
