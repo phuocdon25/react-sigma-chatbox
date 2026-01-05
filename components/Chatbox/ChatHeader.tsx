@@ -22,13 +22,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
   language,
   onLanguageChange
 }) => {
-  const languages: Language[] = ['en', 'vi', 'ja'];
-  
-  const cycleLanguage = () => {
-    const currentIndex = languages.indexOf(language);
-    const nextIndex = (currentIndex + 1) % languages.length;
-    onLanguageChange(languages[nextIndex]);
-  };
+  const languages: { value: Language; label: string }[] = [
+    { value: 'en', label: 'EN' },
+    { value: 'vi', label: 'VI' },
+    { value: 'ja', label: 'JA' }
+  ];
 
   return (
     <div 
@@ -43,40 +41,60 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
              alt="Bot Icon"
            />
         </div>
-        <h3 className="font-bold text-[#1a2b56] text-[14px] tracking-tight flex items-center gap-1">
-          {title} <span className="text-red-400 text-[12px]">✨</span>
-        </h3>
+        <div className="flex flex-col">
+          <h3 className="font-bold text-[#1a2b56] text-[14px] leading-tight tracking-tight flex items-center gap-1">
+            {title} <span className="text-red-400 text-[10px]">✨</span>
+          </h3>
+          <span className="text-[10px] text-green-500 font-medium flex items-center gap-1">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+            Online
+          </span>
+        </div>
       </div>
       
-      <div className="flex items-center gap-1.5 text-gray-500">
-        <button 
-          onClick={cycleLanguage}
-          className="px-1.5 py-0.5 rounded-md hover:bg-white/60 transition-all text-[10px] font-black border border-gray-200 uppercase text-indigo-600 min-w-[32px] flex items-center justify-center bg-white/40"
-          title="Change language"
-        >
-          {language}
-        </button>
+      <div className="flex items-center gap-1">
+        {/* Language Select Box */}
+        <div className="relative group mr-1">
+          <select 
+            value={language}
+            onChange={(e) => onLanguageChange(e.target.value as Language)}
+            className="appearance-none bg-white/50 border border-gray-200 rounded-lg px-2 pr-5 py-1 text-[10px] font-black text-indigo-600 cursor-pointer hover:bg-white transition-all focus:outline-none focus:ring-2 focus:ring-indigo-100 uppercase"
+            title="Select language"
+          >
+            {languages.map((lang) => (
+              <option key={lang.value} value={lang.value} className="font-sans font-bold">
+                {lang.label}
+              </option>
+            ))}
+          </select>
+          <div className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-indigo-400">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          </div>
+        </div>
+
         <button 
           onClick={onReset} 
-          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/60 transition-all"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/60 text-gray-500 hover:text-indigo-600 transition-all"
           title="Reset chat"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path><path d="M21 3v5h-5"></path><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path><path d="M8 16H3v5"></path></svg>
         </button>
+
         <button 
           onClick={onToggleExpand}
-          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/60 transition-all" 
+          className="w-8 h-8 hidden md:flex items-center justify-center rounded-lg hover:bg-white/60 text-gray-500 hover:text-indigo-600 transition-all" 
           title={isExpanded ? "Collapse" : "Expand"}
         >
           {isExpanded ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14h6v6"></path><path d="M20 10h-6V4"></path><path d="M14 10l7-7"></path><path d="M10 14l-7 7"></path></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14h6v6"></path><path d="M20 10h-6V4"></path><path d="M14 10l7-7"></path><path d="M10 14l-7 7"></path></svg>
           ) : (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M21 3l-7 7"></path><path d="M3 21l7-7"></path></svg>
           )}
         </button>
+
         <button 
           onClick={onClose} 
-          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/60 transition-all"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-500 transition-all"
           title="Close"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
