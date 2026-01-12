@@ -43,7 +43,8 @@ const parseInlineMarkdown = (text: string): React.ReactNode[] => {
 };
 
 const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
-  const lines = text.split('\n');
+  // Xử lý các dòng, loại bỏ ký tự \r nếu có
+  const lines = text.replace(/\r/g, '').split('\n');
   const elements: React.ReactNode[] = [];
   
   let currentTable: string[][] = [];
@@ -51,6 +52,7 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
 
   const flushTable = (index: number) => {
     if (currentTable.length > 0) {
+      // Kiểm tra xem có dòng phân cách |--|--| không (thường ở vị trí index 1)
       const hasHeaderSeparator = currentTable.length > 1 && 
         currentTable[1].every(cell => cell.trim().match(/^:?-+:?$/));
       
@@ -58,32 +60,34 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
         ? [currentTable[0], ...currentTable.slice(2)] 
         : currentTable;
 
-      elements.push(
-        <div key={`table-${index}`} className="my-4 overflow-x-auto border border-gray-200 rounded-lg shadow-sm bg-white">
-          <table className="min-w-full divide-y divide-gray-200 text-[13px]">
-            <thead className="bg-gray-50">
-              <tr>
-                {tableData[0].map((cell, i) => (
-                  <th key={i} className="px-3 py-2 text-left font-bold text-gray-700 border-r last:border-r-0 border-gray-200">
-                    {parseInlineMarkdown(cell.trim())}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
-              {tableData.slice(1).map((row, i) => (
-                <tr key={i} className="hover:bg-gray-50/50 transition-colors">
-                  {row.map((cell, j) => (
-                    <td key={j} className="px-3 py-2 text-gray-600 border-r last:border-r-0 border-gray-200 align-top">
+      if (tableData.length > 0) {
+        elements.push(
+          <div key={`table-wrapper-${index}`} className="my-4 overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
+            <table className="min-w-full border-collapse text-[13px] leading-normal">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  {tableData[0].map((cell, i) => (
+                    <th key={i} className="px-4 py-3 text-left font-bold text-slate-700 border-r last:border-r-0 border-slate-200 whitespace-nowrap">
                       {parseInlineMarkdown(cell.trim())}
-                    </td>
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      );
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {tableData.slice(1).map((row, i) => (
+                  <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                    {row.map((cell, j) => (
+                      <td key={j} className="px-4 py-3 text-slate-600 border-r last:border-r-0 border-slate-200 align-top">
+                        {parseInlineMarkdown(cell.trim())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+      }
       currentTable = [];
       isInsideTable = false;
     }
@@ -92,9 +96,13 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
   lines.forEach((line, idx) => {
     const trimmedLine = line.trim();
     
-    // Kiểm tra xem dòng có phải là hàng của bảng không
-    if (trimmedLine.startsWith('|') && trimmedLine.endsWith('|')) {
-      const cells = trimmedLine.split('|').slice(1, -1);
+    // Logic nhận diện hàng của bảng: chứa ký tự | và không phải dòng trống
+    if (trimmedLine.includes('|') && (trimmedLine.startsWith('|') || trimmedLine.split('|').length > 1)) {
+      // Tách cell và loại bỏ cell trống ở đầu/cuối do dấu | biên gây ra
+      let cells = trimmedLine.split('|');
+      if (trimmedLine.startsWith('|')) cells.shift();
+      if (trimmedLine.endsWith('|')) cells.pop();
+      
       currentTable.push(cells);
       isInsideTable = true;
       return;
@@ -102,49 +110,49 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
       flushTable(idx);
     }
 
-    // Header
+    // Header logic (#)
     const headerMatch = trimmedLine.match(/^(#{1,4})\s+(.*)$/);
     if (headerMatch) {
       const level = headerMatch[1].length;
       const content = headerMatch[2];
-      const className = level === 1 ? 'text-lg font-bold mb-3 mt-4 first:mt-1' : 
-                        level === 2 ? 'text-md font-bold mb-2 mt-3' : 
-                        'text-[13px] font-black mb-1.5 mt-4 text-indigo-600 uppercase tracking-widest';
+      const className = level === 1 ? 'text-xl font-bold mb-4 mt-6 first:mt-1' : 
+                        level === 2 ? 'text-lg font-bold mb-3 mt-5' : 
+                        'text-[13px] font-black mb-2 mt-5 text-indigo-600 uppercase tracking-widest';
       elements.push(<div key={idx} className={className}>{parseInlineMarkdown(content)}</div>);
       return;
     }
 
-    // List
+    // List logic (*, -, +)
     const bulletMatch = trimmedLine.match(/^[*+-]\s+(.*)$/);
     if (bulletMatch) {
       const content = bulletMatch[1];
       elements.push(
-        <div key={idx} className="flex gap-2.5 pl-1 mb-1.5 items-start">
-          <span className="text-indigo-400 flex-shrink-0 mt-2 w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
-          <div className="flex-1 leading-relaxed text-gray-800">{parseInlineMarkdown(content)}</div>
+        <div key={idx} className="flex gap-3 pl-1 mb-2 items-start group">
+          <span className="text-indigo-400 flex-shrink-0 mt-2 w-1.5 h-1.5 bg-indigo-400 rounded-full group-hover:scale-125 transition-transform"></span>
+          <div className="flex-1 leading-relaxed text-slate-700">{parseInlineMarkdown(content)}</div>
         </div>
       );
       return;
     }
 
-    // Empty line
+    // Dòng trống
     if (trimmedLine === '') {
-      elements.push(<div key={idx} className="h-2" />);
+      elements.push(<div key={idx} className="h-3" />);
       return;
     }
 
-    // Normal Text
+    // Văn bản bình thường
     elements.push(
-      <div key={idx} className="mb-1 leading-relaxed text-gray-800">
+      <div key={idx} className="mb-1.5 leading-relaxed text-slate-700">
         {parseInlineMarkdown(line)}
       </div>
     );
   });
 
-  // Đảm bảo bảng cuối cùng được render nếu text kết thúc bằng bảng
+  // Render bảng nếu nó là phần cuối của message
   if (isInsideTable) flushTable(lines.length);
 
-  return <div className="markdown-body text-[14px]">{elements}</div>;
+  return <div className="markdown-render w-full">{elements}</div>;
 };
 
 export const ChatMessages: React.FC<ChatMessagesProps> = ({ 
@@ -197,12 +205,12 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             </div>
           )}
           
-          <div className={`flex flex-col ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'} max-w-[96%]`}>
+          <div className={`flex flex-col ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'} w-full max-w-[96%]`}>
             <div 
-              className={`px-4 py-3 rounded-[20px] shadow-sm border border-black/[0.02] ${
+              className={`px-4 py-3 rounded-[20px] shadow-sm border border-black/[0.02] overflow-hidden ${
                 msg.sender === SenderType.USER 
-                  ? 'bg-indigo-600 text-white rounded-tr-none whitespace-pre-line shadow-indigo-100' 
-                  : 'bg-white text-gray-800 border-none rounded-tl-none'
+                  ? 'bg-indigo-600 text-white rounded-tr-none whitespace-pre-line shadow-indigo-100/50' 
+                  : 'bg-white text-slate-800 border-none rounded-tl-none'
               } ${!renderMarkdown || msg.sender === SenderType.USER ? 'whitespace-pre-line' : ''}`}
             >
               {renderMarkdown && msg.sender === SenderType.AI ? (
