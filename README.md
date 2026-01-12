@@ -108,13 +108,14 @@ const handleSimpleAi = async (userInput: string, threadId: string, language: Lan
 | `primaryColor` | `string` | Hex color used for accents and user bubbles. |
 | `botName` | `string` | The display name shown in the header. |
 | `welcomeMessage` | `Translatable<string>` | Initial message sent by the bot. Automatically updates when language is changed before the conversation starts. |
+| `description` | `Translatable<string>` | Text displayed in the introduction section (avatar area). Supports bold markdown. |
 | `placeholder` | `Translatable<string>` | Input field placeholder text. |
 | `avatarUrl` | `string` | URL for the bot icon. |
 | `quickReplies` | `Translatable<string[]>` | List of one-tap answer buttons. |
 | `renderMarkdown` | `boolean` | Enable Markdown support for AI messages, including Tables. |
 
 ### Dynamic Multilingual Support (`Translatable<T>`)
-The fields `welcomeMessage`, `placeholder`, and `quickReplies` support multilingual configuration. You can pass a simple value or an object mapped to `vi`, `en`, or `ja`.
+The fields `welcomeMessage`, `description`, `placeholder`, and `quickReplies` support multilingual configuration. You can pass a simple value or an object mapped to `vi`, `en`, or `ja`.
 
 ```tsx
 const config: ChatboxConfig = {
@@ -126,6 +127,11 @@ const config: ChatboxConfig = {
     vi: 'Chào bạn! Tôi có thể giúp gì cho bạn?',
     en: 'Hello! How can I help you today?',
     ja: 'こんにちは！今日はどのようなお手伝いができますか？'
+  },
+
+  description: {
+    vi: '**Sigma Assistant** hỗ trợ bạn mọi lúc mọi nơi',
+    en: '**Sigma Assistant** supports you anytime, anywhere'
   },
   
   placeholder: {

@@ -31,7 +31,7 @@ export interface Message {
 }
 
 /**
- * Hỗ trợ giá trị đơn hoặc đối tượng đa ngôn ngữ
+ * Support single value or multilingual object
  */
 export type Translatable<T> = T | Partial<Record<Language, T>>;
 
@@ -39,12 +39,13 @@ export interface ChatboxConfig {
   primaryColor: string;
   botName: string;
   welcomeMessage: Translatable<string>;
+  description: Translatable<string>;
   placeholder: Translatable<string>;
   avatarUrl: string;
   quickReplies: Translatable<string[]>;
   /**
-   * Nếu true, tin nhắn từ AI sẽ được render hỗ trợ định dạng Markdown cơ bản.
-   * Mặc định là false (văn bản thuần túy).
+   * If true, messages from AI will be rendered supporting basic Markdown.
+   * Default is false (plain text).
    */
   renderMarkdown?: boolean;
 }

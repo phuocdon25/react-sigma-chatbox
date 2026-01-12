@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Message, MessageType, SenderType } from '../../types';
 import { ProductCard } from './ProductCard';
@@ -6,6 +5,7 @@ import { ProductCard } from './ProductCard';
 interface ChatMessagesProps {
   messages: Message[];
   isLoading: boolean;
+  description: string;
   quickReplies: string[];
   onQuickReply: (reply: string) => void;
   primaryColor: string;
@@ -43,7 +43,7 @@ const parseInlineMarkdown = (text: string): React.ReactNode[] => {
 };
 
 const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
-  // Xử lý các dòng, loại bỏ ký tự \r nếu có
+  // Process lines, remove \r if present
   const lines = text.replace(/\r/g, '').split('\n');
   const elements: React.ReactNode[] = [];
   
@@ -52,7 +52,7 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
 
   const flushTable = (index: number) => {
     if (currentTable.length > 0) {
-      // Kiểm tra xem có dòng phân cách |--|--| không (thường ở vị trí index 1)
+      // Check for separator line |--|--|
       const hasHeaderSeparator = currentTable.length > 1 && 
         currentTable[1].every(cell => cell.trim().match(/^:?-+:?$/));
       
@@ -96,9 +96,8 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
   lines.forEach((line, idx) => {
     const trimmedLine = line.trim();
     
-    // Logic nhận diện hàng của bảng: chứa ký tự | và không phải dòng trống
+    // Table detection logic
     if (trimmedLine.includes('|') && (trimmedLine.startsWith('|') || trimmedLine.split('|').length > 1)) {
-      // Tách cell và loại bỏ cell trống ở đầu/cuối do dấu | biên gây ra
       let cells = trimmedLine.split('|');
       if (trimmedLine.startsWith('|')) cells.shift();
       if (trimmedLine.endsWith('|')) cells.pop();
@@ -135,13 +134,13 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
       return;
     }
 
-    // Dòng trống
+    // Empty lines
     if (trimmedLine === '') {
       elements.push(<div key={idx} className="h-3" />);
       return;
     }
 
-    // Văn bản bình thường
+    // Normal text
     elements.push(
       <div key={idx} className="mb-1.5 leading-relaxed text-slate-700">
         {parseInlineMarkdown(line)}
@@ -149,7 +148,6 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
     );
   });
 
-  // Render bảng nếu nó là phần cuối của message
   if (isInsideTable) flushTable(lines.length);
 
   return <div className="markdown-render w-full">{elements}</div>;
@@ -158,6 +156,7 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
 export const ChatMessages: React.FC<ChatMessagesProps> = ({ 
   messages, 
   isLoading, 
+  description,
   quickReplies, 
   onQuickReply,
   primaryColor,
@@ -183,7 +182,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
           Sigma <span className="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-md leading-none ml-1 uppercase font-bold tracking-tight">AI</span>
         </h2>
         <div className="text-[14px] text-gray-600 mt-3 leading-relaxed px-4 max-w-[280px]">
-          <p><span className="font-bold text-gray-800">Sigma Assistant</span> hỗ trợ bạn mọi lúc mọi nơi</p>
+          {description && <div className="bot-description">{parseInlineMarkdown(description)}</div>}
         </div>
       </div>
 

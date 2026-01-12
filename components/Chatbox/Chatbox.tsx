@@ -48,6 +48,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
   // Update UI components dynamically
   const currentPlaceholder = useMemo(() => getTranslated(config.placeholder, language, "Type a message..."), [config.placeholder, language]);
   const currentQuickReplies = useMemo(() => getTranslated(config.quickReplies, language, []), [config.quickReplies, language]);
+  const currentDescription = useMemo(() => getTranslated(config.description, language, ""), [config.description, language]);
 
   // If user changes language and hasn't started chatting, translate the welcome message
   useEffect(() => {
@@ -198,6 +199,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
              <ChatMessages 
                 messages={messages} 
                 isLoading={isLoading} 
+                description={currentDescription}
                 quickReplies={currentQuickReplies}
                 onQuickReply={(reply) => handleSendMessage(reply)}
                 primaryColor={config.primaryColor}

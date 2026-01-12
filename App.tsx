@@ -6,20 +6,26 @@ const App: React.FC = () => {
   const config: ChatboxConfig = {
     primaryColor: '#6366f1',
     botName: 'Sigma Assistant',
-    // Cấu hình đa ngôn ngữ cho Welcome Message
+    // Multilingual Welcome Message
     welcomeMessage: {
       vi: 'Chào bạn! Tôi là trợ lý AI Sigma. Bạn cần tôi hỗ trợ gì hôm nay?',
       en: 'Hello! I am Sigma AI Assistant. How can I help you today?',
       ja: 'こんにちは！シグマAIアシスタントです。今日はどのようなお手伝いができますか？'
     },
-    // Cấu hình đa ngôn ngữ cho Placeholder
+    // Multilingual Bot Description
+    description: {
+      vi: '**Sigma Assistant** hỗ trợ bạn mọi lúc mọi nơi',
+      en: '**Sigma Assistant** supports you anytime, anywhere',
+      ja: '**Sigma Assistant** は、いつでもどこでもあなたをサポートします'
+    },
+    // Multilingual Placeholder
     placeholder: {
       vi: 'Nhập tin nhắn để bắt đầu chat...',
       en: 'Type a message to start chatting...',
       ja: 'メッセージを入力してください...'
     },
     avatarUrl: 'https://fptshop.com.vn/img/bitu/bitu-avatar.png',
-    // Cấu hình đa ngôn ngữ cho Quick Replies
+    // Multilingual Quick Replies
     quickReplies: {
       vi: ['Giá iPhone 15', 'Khuyến mãi hot', 'Chính sách bảo hành'],
       en: ['iPhone 15 Price', 'Hot deals', 'Warranty policy'],
@@ -31,7 +37,7 @@ const App: React.FC = () => {
   const handleAiResponse = async (userInput: string, threadId: string, language: Language) => {
     await new Promise(r => setTimeout(r, 1000));
     
-    // Giả lập logic so sánh iPhone cho thấy Markdown Table hoạt động
+    // Simulated iPhone comparison logic
     if (userInput.toLowerCase().includes('iphone')) {
         return `I'd be happy to compare the iPhone 11 Pro Max and the iPhone 12 Pro Max!
 
@@ -61,12 +67,12 @@ Hope this helps!`;
           Sigma <span className="text-indigo-600">Chatbox</span> UI
         </h1>
         <p className="text-slate-500 text-lg">
-          Hỗ trợ đa ngôn ngữ động cho Placeholder, Quick Replies & Welcome Message.
+          Dynamic Multilingual Support for Placeholder, Quick Replies, Welcome Message & Bot Description.
         </p>
       </div>
 
       <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 max-w-2xl w-full text-center">
-        <p className="text-slate-600 mb-6 font-medium font-sans">Thử chuyển đổi ngôn ngữ trong chatbox để thấy sự thay đổi của UI.</p>
+        <p className="text-slate-600 mb-6 font-medium font-sans">Try switching the language in the chatbox to see the UI change dynamically.</p>
         <div className="flex justify-center gap-6">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-400">
             <i className="fa-solid fa-language text-indigo-500"></i>
