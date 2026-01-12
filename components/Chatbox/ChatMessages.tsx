@@ -44,45 +44,107 @@ const parseInlineMarkdown = (text: string): React.ReactNode[] => {
 
 const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
   const lines = text.split('\n');
+  const elements: React.ReactNode[] = [];
   
-  return (
-    <div className="markdown-body space-y-1.5">
-      {lines.map((line, idx) => {
-        const trimmedLine = line.trim();
-        
-        const headerMatch = trimmedLine.match(/^(#{1,4})\s+(.*)$/);
-        if (headerMatch) {
-          const level = headerMatch[1].length;
-          const content = headerMatch[2];
-          const className = level === 1 ? 'text-lg font-bold mb-3 mt-1' : 
-                            level === 2 ? 'text-md font-bold mb-2 mt-1' : 
-                            'text-[14px] font-bold mb-1.5 mt-0.5 text-gray-900 uppercase tracking-wide';
-          return <div key={idx} className={className}>{parseInlineMarkdown(content)}</div>;
-        }
+  let currentTable: string[][] = [];
+  let isInsideTable = false;
 
-        const bulletMatch = trimmedLine.match(/^[*+-]\s+(.*)$/);
-        if (bulletMatch) {
-          const content = bulletMatch[1];
-          return (
-            <div key={idx} className="flex gap-2.5 pl-1 mb-2 items-start">
-              <span className="text-gray-400 flex-shrink-0 mt-1.5 w-1 h-1 bg-gray-400 rounded-full"></span>
-              <div className="flex-1 leading-relaxed text-gray-800">{parseInlineMarkdown(content)}</div>
-            </div>
-          );
-        }
+  const flushTable = (index: number) => {
+    if (currentTable.length > 0) {
+      const hasHeaderSeparator = currentTable.length > 1 && 
+        currentTable[1].every(cell => cell.trim().match(/^:?-+:?$/));
+      
+      const tableData = hasHeaderSeparator 
+        ? [currentTable[0], ...currentTable.slice(2)] 
+        : currentTable;
 
-        if (trimmedLine === '') {
-          return <div key={idx} className="h-3" />;
-        }
+      elements.push(
+        <div key={`table-${index}`} className="my-4 overflow-x-auto border border-gray-200 rounded-lg shadow-sm bg-white">
+          <table className="min-w-full divide-y divide-gray-200 text-[13px]">
+            <thead className="bg-gray-50">
+              <tr>
+                {tableData[0].map((cell, i) => (
+                  <th key={i} className="px-3 py-2 text-left font-bold text-gray-700 border-r last:border-r-0 border-gray-200">
+                    {parseInlineMarkdown(cell.trim())}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {tableData.slice(1).map((row, i) => (
+                <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                  {row.map((cell, j) => (
+                    <td key={j} className="px-3 py-2 text-gray-600 border-r last:border-r-0 border-gray-200 align-top">
+                      {parseInlineMarkdown(cell.trim())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+      currentTable = [];
+      isInsideTable = false;
+    }
+  };
 
-        return (
-          <div key={idx} className="mb-1 leading-relaxed text-gray-800">
-            {parseInlineMarkdown(line)}
-          </div>
-        );
-      })}
-    </div>
-  );
+  lines.forEach((line, idx) => {
+    const trimmedLine = line.trim();
+    
+    // Kiểm tra xem dòng có phải là hàng của bảng không
+    if (trimmedLine.startsWith('|') && trimmedLine.endsWith('|')) {
+      const cells = trimmedLine.split('|').slice(1, -1);
+      currentTable.push(cells);
+      isInsideTable = true;
+      return;
+    } else if (isInsideTable) {
+      flushTable(idx);
+    }
+
+    // Header
+    const headerMatch = trimmedLine.match(/^(#{1,4})\s+(.*)$/);
+    if (headerMatch) {
+      const level = headerMatch[1].length;
+      const content = headerMatch[2];
+      const className = level === 1 ? 'text-lg font-bold mb-3 mt-4 first:mt-1' : 
+                        level === 2 ? 'text-md font-bold mb-2 mt-3' : 
+                        'text-[13px] font-black mb-1.5 mt-4 text-indigo-600 uppercase tracking-widest';
+      elements.push(<div key={idx} className={className}>{parseInlineMarkdown(content)}</div>);
+      return;
+    }
+
+    // List
+    const bulletMatch = trimmedLine.match(/^[*+-]\s+(.*)$/);
+    if (bulletMatch) {
+      const content = bulletMatch[1];
+      elements.push(
+        <div key={idx} className="flex gap-2.5 pl-1 mb-1.5 items-start">
+          <span className="text-indigo-400 flex-shrink-0 mt-2 w-1.5 h-1.5 bg-indigo-400 rounded-full"></span>
+          <div className="flex-1 leading-relaxed text-gray-800">{parseInlineMarkdown(content)}</div>
+        </div>
+      );
+      return;
+    }
+
+    // Empty line
+    if (trimmedLine === '') {
+      elements.push(<div key={idx} className="h-2" />);
+      return;
+    }
+
+    // Normal Text
+    elements.push(
+      <div key={idx} className="mb-1 leading-relaxed text-gray-800">
+        {parseInlineMarkdown(line)}
+      </div>
+    );
+  });
+
+  // Đảm bảo bảng cuối cùng được render nếu text kết thúc bằng bảng
+  if (isInsideTable) flushTable(lines.length);
+
+  return <div className="markdown-body text-[14px]">{elements}</div>;
 };
 
 export const ChatMessages: React.FC<ChatMessagesProps> = ({ 
@@ -100,7 +162,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
     <div className="flex flex-col gap-8 pb-4">
       <div className="flex flex-col items-center justify-center py-8 text-center animate-msg">
         <div className="relative mb-5">
-          <div className="w-24 h-24 flex items-center justify-center">
+          <div className="w-20 h-20 flex items-center justify-center">
              <img 
                src={botAvatar} 
                onError={(e) => (e.currentTarget.src = fallbackAvatar)}
@@ -112,9 +174,8 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         <h2 className="text-xl font-bold text-[#1a2b56] flex items-center justify-center gap-1">
           Sigma <span className="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-md leading-none ml-1 uppercase font-bold tracking-tight">AI</span>
         </h2>
-        <div className="text-[14px] text-gray-600 mt-3 leading-relaxed px-4">
+        <div className="text-[14px] text-gray-600 mt-3 leading-relaxed px-4 max-w-[280px]">
           <p><span className="font-bold text-gray-800">Sigma Assistant</span> hỗ trợ bạn mọi lúc mọi nơi</p>
-          <p>Tăng cường hiệu suất với AI thông minh</p>
         </div>
       </div>
 
@@ -136,9 +197,9 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
             </div>
           )}
           
-          <div className={`flex flex-col ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'} max-w-[94%]`}>
+          <div className={`flex flex-col ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'} max-w-[96%]`}>
             <div 
-              className={`px-4 py-3 rounded-[18px] text-[14px] shadow-sm border border-black/[0.03] ${
+              className={`px-4 py-3 rounded-[20px] shadow-sm border border-black/[0.02] ${
                 msg.sender === SenderType.USER 
                   ? 'bg-indigo-600 text-white rounded-tr-none whitespace-pre-line shadow-indigo-100' 
                   : 'bg-white text-gray-800 border-none rounded-tl-none'
