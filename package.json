@@ -1,6 +1,6 @@
 {
   "name": "react-sigma-chatbox",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "A high-quality React chatbox library featuring product cards, quick replies, and AI integration.",
   "main": "dist/index.js",
