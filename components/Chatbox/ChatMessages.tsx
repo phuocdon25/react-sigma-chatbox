@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Message, MessageType, SenderType } from '../../types';
 import { ProductCard } from './ProductCard';
 
@@ -11,6 +11,53 @@ interface ChatMessagesProps {
   primaryColor: string;
   renderMarkdown?: boolean;
 }
+
+const CopyButton: React.FC<{ text: string }> = ({ text }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  return (
+    <button 
+      onClick={handleCopy}
+      className="p-1.5 rounded-md hover:bg-slate-100 text-slate-400 hover:text-indigo-600 transition-all active:scale-90 flex items-center gap-1 group/copy"
+      title="Copy message"
+    >
+      {copied ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><path d="M20 6 9 17l-5-5"/></svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+      )}
+    </button>
+  );
+};
+
+const Typewriter: React.FC<{ text: string; speed?: number; onComplete?: () => void }> = ({ text, speed = 15, onComplete }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (index < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText((prev) => prev + text.charAt(index));
+        setIndex((prev) => prev + 1);
+      }, speed);
+      return () => clearTimeout(timeout);
+    } else if (onComplete) {
+      onComplete();
+    }
+  }, [index, text, speed, onComplete]);
+
+  return <span>{displayedText}</span>;
+};
 
 const parseInlineMarkdown = (text: string): React.ReactNode[] => {
   const regex = /(\*\*.*?\*\*|\[.*?\]\(.*?\))/g;
@@ -43,7 +90,6 @@ const parseInlineMarkdown = (text: string): React.ReactNode[] => {
 };
 
 const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
-  // Process lines, remove \r if present
   const lines = text.replace(/\r/g, '').split('\n');
   const elements: React.ReactNode[] = [];
   
@@ -52,7 +98,6 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
 
   const flushTable = (index: number) => {
     if (currentTable.length > 0) {
-      // Check for separator line |--|--|
       const hasHeaderSeparator = currentTable.length > 1 && 
         currentTable[1].every(cell => cell.trim().match(/^:?-+:?$/));
       
@@ -62,29 +107,33 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
 
       if (tableData.length > 0) {
         elements.push(
-          <div key={`table-wrapper-${index}`} className="my-4 overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white">
-            <table className="min-w-full border-collapse text-[13px] leading-normal">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  {tableData[0].map((cell, i) => (
-                    <th key={i} className="px-4 py-3 text-left font-bold text-slate-700 border-r last:border-r-0 border-slate-200 whitespace-nowrap">
-                      {parseInlineMarkdown(cell.trim())}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {tableData.slice(1).map((row, i) => (
-                  <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                    {row.map((cell, j) => (
-                      <td key={j} className="px-4 py-3 text-slate-600 border-r last:border-r-0 border-slate-200 align-top">
+          <div key={`table-wrapper-${index}`} className="my-4 relative group/table">
+            <div className="overflow-x-auto border border-slate-200 rounded-xl shadow-sm bg-white chat-scrollbar custom-table-scroll">
+              <table className="min-w-full border-collapse text-[13px] leading-normal">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    {tableData[0].map((cell, i) => (
+                      <th key={i} className="px-4 py-3 text-left font-bold text-slate-700 border-r last:border-r-0 border-slate-200 whitespace-nowrap">
                         {parseInlineMarkdown(cell.trim())}
-                      </td>
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {tableData.slice(1).map((row, i) => (
+                    <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                      {row.map((cell, j) => (
+                        <td key={j} className="px-4 py-3 text-slate-600 border-r last:border-r-0 border-slate-200 align-top">
+                          {parseInlineMarkdown(cell.trim())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Scroll Indicator for mobile */}
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white/80 to-transparent pointer-events-none md:hidden opacity-0 group-hover/table:opacity-100 transition-opacity"></div>
           </div>
         );
       }
@@ -96,7 +145,6 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
   lines.forEach((line, idx) => {
     const trimmedLine = line.trim();
     
-    // Table detection logic
     if (trimmedLine.includes('|') && (trimmedLine.startsWith('|') || trimmedLine.split('|').length > 1)) {
       let cells = trimmedLine.split('|');
       if (trimmedLine.startsWith('|')) cells.shift();
@@ -109,7 +157,6 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
       flushTable(idx);
     }
 
-    // Header logic (#)
     const headerMatch = trimmedLine.match(/^(#{1,4})\s+(.*)$/);
     if (headerMatch) {
       const level = headerMatch[1].length;
@@ -121,7 +168,6 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
       return;
     }
 
-    // List logic (*, -, +)
     const bulletMatch = trimmedLine.match(/^[*+-]\s+(.*)$/);
     if (bulletMatch) {
       const content = bulletMatch[1];
@@ -134,13 +180,11 @@ const MarkdownLite: React.FC<{ text: string }> = ({ text }) => {
       return;
     }
 
-    // Empty lines
     if (trimmedLine === '') {
       elements.push(<div key={idx} className="h-3" />);
       return;
     }
 
-    // Normal text
     elements.push(
       <div key={idx} className="mb-1.5 leading-relaxed text-slate-700">
         {parseInlineMarkdown(line)}
@@ -189,27 +233,32 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
       {messages.map((msg, index) => (
         <div 
           key={msg.id} 
-          className={`flex flex-col animate-msg ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'}`}
+          className={`flex flex-col animate-msg group ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'}`}
           style={{ animationDelay: `${index * 0.05}s` }}
         >
           {msg.sender === SenderType.AI && (
-            <div className="flex items-center gap-1.5 mb-2 ml-1">
-               <img 
-                src={botAvatar} 
-                onError={(e) => (e.currentTarget.src = fallbackAvatar)}
-                className="w-4 h-4 object-contain" 
-                alt="AI"
-               />
-               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">AI Agent</span>
+            <div className="flex items-center justify-between w-full max-w-[96%] mb-2 ml-1">
+              <div className="flex items-center gap-1.5">
+                <img 
+                  src={botAvatar} 
+                  onError={(e) => (e.currentTarget.src = fallbackAvatar)}
+                  className="w-4 h-4 object-contain" 
+                  alt="AI"
+                />
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">AI Agent</span>
+              </div>
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <CopyButton text={msg.content} />
+              </div>
             </div>
           )}
           
           <div className={`flex flex-col ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'} w-full max-w-[96%]`}>
             <div 
-              className={`px-4 py-3 rounded-[20px] shadow-sm border border-black/[0.02] overflow-hidden ${
+              className={`px-4 py-3 rounded-[20px] shadow-sm border border-black/[0.02] overflow-hidden transition-all duration-300 ${
                 msg.sender === SenderType.USER 
                   ? 'bg-indigo-600 text-white rounded-tr-none whitespace-pre-line shadow-indigo-100/50' 
-                  : 'bg-white text-slate-800 border-none rounded-tl-none'
+                  : 'bg-white text-slate-800 border-none rounded-tl-none hover:shadow-md'
               } ${!renderMarkdown || msg.sender === SenderType.USER ? 'whitespace-pre-line' : ''}`}
             >
               {renderMarkdown && msg.sender === SenderType.AI ? (

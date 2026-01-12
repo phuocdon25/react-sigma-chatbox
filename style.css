@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -36,6 +35,7 @@
   /* Scrollbar for chat frame */
   .chat-scrollbar::-webkit-scrollbar {
     width: 4px;
+    height: 4px;
   }
   .chat-scrollbar::-webkit-scrollbar-track {
     background: transparent;
@@ -45,6 +45,17 @@
     border-radius: 10px;
   }
   
+  /* Custom table scrollbar style */
+  .custom-table-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+  .custom-table-scroll::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+  }
+  .custom-table-scroll::-webkit-scrollbar-thumb:hover {
+    background: #cbd5e1;
+  }
+
   /* Hide scrollbar for product carousel */
   .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -55,14 +66,18 @@
   }
 
   /* Table styles improvement */
-  .markdown-body table {
+  .markdown-render table {
     border-collapse: collapse;
     width: 100%;
     margin: 10px 0;
   }
   
-  .markdown-body th, .markdown-body td {
+  .markdown-render th, .markdown-render td {
     border: 1px solid #f1f5f9;
+  }
+
+  .bot-description strong {
+    color: #4f46e5; /* Indigo-600 for highlighted desc */
   }
 }
 
