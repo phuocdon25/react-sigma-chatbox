@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ChatboxConfig, Message, MessageType, SenderType, AiResponseHandler, Product, Language } from '../../types';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { ChatboxConfig, Message, MessageType, SenderType, AiResponseHandler, Product, Language, Translatable } from '../../types';
 import { ChatHeader } from './ChatHeader';
 import { ChatMessages } from './ChatMessages';
 import { ChatInput } from './ChatInput';
@@ -13,26 +13,50 @@ interface ChatboxProps {
 // Helper to generate random thread ID
 const generateThreadId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
+// Helper to resolve translatable fields
+const getTranslated = <T,>(value: Translatable<T>, lang: Language, fallback: T): T => {
+  if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    return (value as any)[lang] || (value as any)['en'] || (Object.values(value)[0]) || fallback;
+  }
+  return (value as T) ?? fallback;
+};
+
 export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [threadId, setThreadId] = useState(generateThreadId());
-  const [language, setLanguage] = useState<Language>('en');
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      type: MessageType.TEXT,
-      sender: SenderType.AI,
-      content: config.welcomeMessage,
-      timestamp: new Date()
-    }
-  ]);
+  const [language, setLanguage] = useState<Language>('vi');
+  
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRequestId = useRef(0);
 
-  // Kích hoạt transition sau khi chatbox đã mount lần đầu để tránh lỗi slide ngang
+  // Initialize welcome message based on language
+  useEffect(() => {
+    const welcome = getTranslated(config.welcomeMessage, language, "Hello!");
+    setMessages([{
+      id: 'welcome',
+      type: MessageType.TEXT,
+      sender: SenderType.AI,
+      content: welcome,
+      timestamp: new Date()
+    }]);
+  }, []); // Only run once on mount
+
+  // Update UI components dynamically
+  const currentPlaceholder = useMemo(() => getTranslated(config.placeholder, language, "Type a message..."), [config.placeholder, language]);
+  const currentQuickReplies = useMemo(() => getTranslated(config.quickReplies, language, []), [config.quickReplies, language]);
+
+  // If user changes language and hasn't started chatting, translate the welcome message
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].id === 'welcome') {
+      const welcome = getTranslated(config.welcomeMessage, language, "Hello!");
+      setMessages([{ ...messages[0], content: welcome }]);
+    }
+  }, [language]);
+
   useEffect(() => {
     if (isOpen) {
       const timer = setTimeout(() => setIsReady(true), 50);
@@ -64,10 +88,8 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
     setIsLoading(true);
 
     try {
-      // Pass the threadId and language to the handler
       const responseResult = onGetAiResponse(text, threadId, language);
       
-      // Xử lý Streaming (Async Generator)
       if (responseResult && typeof responseResult === 'object' && Symbol.asyncIterator in responseResult) {
         let fullContent = '';
         let hasStarted = false;
@@ -93,7 +115,6 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
           ));
         }
       } 
-      // Xử lý Promise (Static Response)
       else {
         const response = await responseResult;
         if (requestId !== activeRequestId.current) return;
@@ -116,24 +137,26 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
       if (requestId !== activeRequestId.current) return;
       console.error("Chatbox Error:", err);
       setIsLoading(false);
+      const errorMsg = language === 'vi' ? "Hệ thống đang bận, vui lòng thử lại sau." : "System is busy, please try again later.";
       setMessages(prev => [...prev, {
         id: `err-${Date.now()}`,
         type: MessageType.TEXT,
         sender: SenderType.AI,
-        content: "Hệ thống đang bận, vui lòng thử lại sau.",
+        content: errorMsg,
         timestamp: new Date()
       }]);
     }
   };
 
   const handleResetChat = () => {
-    activeRequestId.current++; // Hủy các request đang chạy
-    setThreadId(generateThreadId()); // Tạo threadId mới ngẫu nhiên
+    activeRequestId.current++;
+    setThreadId(generateThreadId());
+    const welcome = getTranslated(config.welcomeMessage, language, "Hello!");
     setMessages([{
       id: 'welcome',
       type: MessageType.TEXT,
       sender: SenderType.AI,
-      content: config.welcomeMessage,
+      content: welcome,
       timestamp: new Date()
     }]);
     setIsLoading(false);
@@ -175,7 +198,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
              <ChatMessages 
                 messages={messages} 
                 isLoading={isLoading} 
-                quickReplies={config.quickReplies}
+                quickReplies={currentQuickReplies}
                 onQuickReply={(reply) => handleSendMessage(reply)}
                 primaryColor={config.primaryColor}
                 renderMarkdown={config.renderMarkdown}
@@ -184,7 +207,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
 
           <div className="bg-white p-3 border-t border-slate-100">
             <ChatInput 
-              placeholder={config.placeholder} 
+              placeholder={currentPlaceholder} 
               onSendMessage={handleSendMessage} 
               primaryColor={config.primaryColor}
             />

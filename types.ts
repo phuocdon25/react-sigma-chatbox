@@ -30,13 +30,18 @@ export interface Message {
   timestamp: Date;
 }
 
+/**
+ * Hỗ trợ giá trị đơn hoặc đối tượng đa ngôn ngữ
+ */
+export type Translatable<T> = T | Partial<Record<Language, T>>;
+
 export interface ChatboxConfig {
   primaryColor: string;
   botName: string;
-  welcomeMessage: string;
-  placeholder: string;
+  welcomeMessage: Translatable<string>;
+  placeholder: Translatable<string>;
   avatarUrl: string;
-  quickReplies: string[];
+  quickReplies: Translatable<string[]>;
   /**
    * Nếu true, tin nhắn từ AI sẽ được render hỗ trợ định dạng Markdown cơ bản.
    * Mặc định là false (văn bản thuần túy).

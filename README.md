@@ -92,43 +92,6 @@ const handleSimpleAi = async (userInput: string, threadId: string, language: Lan
 <Chatbox onGetAiResponse={handleSimpleAi} config={config} />
 ```
 
-### Option 2: Streaming Response (Async Generator)
-Use this for real-time "typing" effects.
-
-```tsx
-async function* handleStreamingAi(userInput: string, threadId: string, language: Language) {
-  const chunks = language === 'ja' 
-    ? ["こんにちは！", "私は **Sigma AI** です。", "何かお手伝いしましょうか？"]
-    : ["Hello! ", "I am **Sigma AI**. ", "How can I help?"];
-    
-  for (const chunk of chunks) {
-    await new Promise(r => setTimeout(r, 150));
-    yield chunk;
-  }
-}
-
-<Chatbox onGetAiResponse={handleStreamingAi} config={config} />
-```
-
-### Option 3: Product Carousel Response
-You can return an object containing products to show a carousel.
-```tsx
-const handleProductSearch = async (userInput: string, threadId: string, language: Language) => {
-  return {
-    text: language === 'vi' ? "Xem các mẫu **iPhone** mới nhất:" : "Check out our latest **iPhone** models:",
-    products: [
-      {
-        id: 'ip15',
-        name: 'iPhone 15 Pro Max',
-        price: '29.990.000₫',
-        image: 'https://fptshop.com.vn/img/products/iphone-15-pro-max.png',
-        description: 'The ultimate iPhone.'
-      }
-    ]
-  };
-};
-```
-
 ---
 
 ## ⚙️ Component Configuration
@@ -144,11 +107,38 @@ const handleProductSearch = async (userInput: string, threadId: string, language
 | :--- | :--- | :--- |
 | `primaryColor` | `string` | Hex color used for accents and user bubbles. |
 | `botName` | `string` | The display name shown in the header. |
-| `welcomeMessage` | `string` | Initial message sent by the bot. |
-| `placeholder` | `string` | Input field placeholder. |
+| `welcomeMessage` | `Translatable<string>` | Initial message sent by the bot. Automatically updates when language is changed before the conversation starts. |
+| `placeholder` | `Translatable<string>` | Input field placeholder text. |
 | `avatarUrl` | `string` | URL for the bot icon. |
-| `quickReplies` | `string[]` | One-tap answer buttons. |
-| `renderMarkdown` | `boolean` | Enable Markdown support for AI messages. |
+| `quickReplies` | `Translatable<string[]>` | List of one-tap answer buttons. |
+| `renderMarkdown` | `boolean` | Enable Markdown support for AI messages, including Tables. |
+
+### Dynamic Multilingual Support (`Translatable<T>`)
+The fields `welcomeMessage`, `placeholder`, and `quickReplies` support multilingual configuration. You can pass a simple value or an object mapped to `vi`, `en`, or `ja`.
+
+```tsx
+const config: ChatboxConfig = {
+  // Simple value
+  botName: 'Sigma Assistant',
+  
+  // Multilingual Object
+  welcomeMessage: {
+    vi: 'Chào bạn! Tôi có thể giúp gì cho bạn?',
+    en: 'Hello! How can I help you today?',
+    ja: 'こんにちは！今日はどのようなお手伝いができますか？'
+  },
+  
+  placeholder: {
+    vi: 'Nhập tin nhắn...',
+    en: 'Type a message...'
+  },
+  
+  quickReplies: {
+    vi: ['Giá iPhone 15', 'Bảo hành'],
+    en: ['iPhone 15 Price', 'Warranty']
+  }
+};
+```
 
 ---
 
