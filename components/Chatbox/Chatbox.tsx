@@ -26,7 +26,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [threadId, setThreadId] = useState(generateThreadId());
-  const [language, setLanguage] = useState<Language>('vi');
+  const [language, setLanguage] = useState<Language>('en');
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -169,7 +169,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
     ${isReady ? 'transition-[width,height,border-radius,right,bottom] duration-300 ease-in-out' : ''}
     ${isExpanded 
       ? 'bottom-0 right-0 w-full h-full md:bottom-6 md:right-28 md:w-[850px] md:h-[85vh] rounded-none md:rounded-[32px]' 
-      : 'bottom-0 right-0 w-full h-[80vh] md:bottom-6 md:right-28 md:w-[380px] md:h-[580px] rounded-t-[28px] md:rounded-[28px]'
+      : 'bottom-0 right-0 w-full h-[80vh] md:bottom-6 md:right-28 md:w-[420px] md:h-[580px] rounded-t-[28px] md:rounded-[28px]'
     }
   `;
 

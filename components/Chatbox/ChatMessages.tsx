@@ -167,7 +167,7 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 
   return (
     <div className="flex flex-col gap-8 pb-4">
-      <div className="flex flex-col items-center justify-center py-8 text-center animate-msg">
+      <div className="flex flex-col items-center justify-center pt-4 text-center animate-msg">
         <div className="relative mb-5">
           <div className="w-20 h-20 flex items-center justify-center">
              <img 
