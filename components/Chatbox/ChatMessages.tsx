@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Message, MessageType, SenderType } from '../../types';
 import { ProductCard } from './ProductCard';
 
@@ -40,9 +40,17 @@ const CopyButton: React.FC<{ text: string }> = ({ text }) => {
   );
 };
 
-const Typewriter: React.FC<{ text: string; speed?: number; onComplete?: () => void }> = ({ text, speed = 15, onComplete }) => {
+const Typewriter: React.FC<{ text: string; speed?: number; onComplete?: () => void }> = ({ text, speed = 8, onComplete }) => {
   const [displayedText, setDisplayedText] = useState("");
   const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    // If text changes (e.g. streaming), reset index if current text is longer than what we have
+    if (text.length < displayedText.length) {
+      setDisplayedText("");
+      setIndex(0);
+    }
+  }, [text]);
 
   useEffect(() => {
     if (index < text.length) {
@@ -51,7 +59,7 @@ const Typewriter: React.FC<{ text: string; speed?: number; onComplete?: () => vo
         setIndex((prev) => prev + 1);
       }, speed);
       return () => clearTimeout(timeout);
-    } else if (onComplete) {
+    } else if (onComplete && text.length > 0) {
       onComplete();
     }
   }, [index, text, speed, onComplete]);
@@ -208,6 +216,9 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
 }) => {
   const botAvatar = "https://fptshop.com.vn/img/bitu/bitu-avatar.png";
   const fallbackAvatar = "https://cdn-icons-png.flaticon.com/512/4712/4712035.png";
+  
+  // Track which messages have finished typing to avoid re-typing on re-render
+  const [typedMessageIds, setTypedMessageIds] = useState<Set<string>>(new Set(['welcome']));
 
   return (
     <div className="flex flex-col gap-8 pb-4">
@@ -225,75 +236,87 @@ export const ChatMessages: React.FC<ChatMessagesProps> = ({
         <h2 className="text-xl font-bold text-[#1a2b56] flex items-center justify-center gap-1">
           Sigma <span className="bg-indigo-600 text-white text-[10px] px-1.5 py-0.5 rounded-md leading-none ml-1 uppercase font-bold tracking-tight">AI</span>
         </h2>
-        <div className="text-[14px] text-gray-600 mt-3 leading-relaxed px-4 max-w-[280px]">
+        <div className="text-[14px] text-gray-600 mt-3 leading-relaxed px-4 max-w-[320px]">
           {description && <div className="bot-description">{parseInlineMarkdown(description)}</div>}
         </div>
       </div>
 
-      {messages.map((msg, index) => (
-        <div 
-          key={msg.id} 
-          className={`flex flex-col animate-msg group ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'}`}
-          style={{ animationDelay: `${index * 0.05}s` }}
-        >
-          {msg.sender === SenderType.AI && (
-            <div className="flex items-center justify-between w-full max-w-[96%] mb-2 ml-1">
-              <div className="flex items-center gap-1.5">
-                <img 
-                  src={botAvatar} 
-                  onError={(e) => (e.currentTarget.src = fallbackAvatar)}
-                  className="w-4 h-4 object-contain" 
-                  alt="AI"
-                />
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">AI Agent</span>
+      {messages.map((msg, index) => {
+        const isLatestAiMessage = msg.sender === SenderType.AI && index === messages.length - 1 && !isLoading;
+        const shouldType = isLatestAiMessage && !typedMessageIds.has(msg.id);
+
+        return (
+          <div 
+            key={msg.id} 
+            className={`flex flex-col animate-msg group ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'}`}
+            style={{ animationDelay: `${index * 0.05}s` }}
+          >
+            {msg.sender === SenderType.AI && (
+              <div className="flex items-center justify-between w-full max-w-[96%] mb-2 ml-1">
+                <div className="flex items-center gap-1.5">
+                  <img 
+                    src={botAvatar} 
+                    onError={(e) => (e.currentTarget.src = fallbackAvatar)}
+                    className="w-4 h-4 object-contain" 
+                    alt="AI"
+                  />
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">AI Agent</span>
+                </div>
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <CopyButton text={msg.content} />
+                </div>
               </div>
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <CopyButton text={msg.content} />
+            )}
+            
+            <div className={`flex flex-col ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'} w-full max-w-[96%]`}>
+              <div 
+                className={`px-4 py-3 rounded-[20px] shadow-sm border border-black/[0.02] overflow-hidden transition-all duration-300 ${
+                  msg.sender === SenderType.USER 
+                    ? 'bg-indigo-600 text-white rounded-tr-none whitespace-pre-line shadow-indigo-100/50' 
+                    : 'bg-white text-slate-800 border-none rounded-tl-none hover:shadow-md'
+                } ${(!renderMarkdown || msg.sender === SenderType.USER) && !shouldType ? 'whitespace-pre-line' : ''}`}
+              >
+                {shouldType ? (
+                  <Typewriter 
+                    text={msg.content} 
+                    onComplete={() => setTypedMessageIds(prev => new Set(prev).add(msg.id))} 
+                  />
+                ) : (
+                  renderMarkdown && msg.sender === SenderType.AI ? (
+                    <MarkdownLite text={msg.content} />
+                  ) : (
+                    msg.content
+                  )
+                )}
               </div>
-            </div>
-          )}
-          
-          <div className={`flex flex-col ${msg.sender === SenderType.USER ? 'items-end' : 'items-start'} w-full max-w-[96%]`}>
-            <div 
-              className={`px-4 py-3 rounded-[20px] shadow-sm border border-black/[0.02] overflow-hidden transition-all duration-300 ${
-                msg.sender === SenderType.USER 
-                  ? 'bg-indigo-600 text-white rounded-tr-none whitespace-pre-line shadow-indigo-100/50' 
-                  : 'bg-white text-slate-800 border-none rounded-tl-none hover:shadow-md'
-              } ${!renderMarkdown || msg.sender === SenderType.USER ? 'whitespace-pre-line' : ''}`}
-            >
-              {renderMarkdown && msg.sender === SenderType.AI ? (
-                <MarkdownLite text={msg.content} />
-              ) : (
-                msg.content
+
+              {msg.type === MessageType.PRODUCT_LIST && msg.products && (
+                <div className="w-full mt-4 flex gap-4 overflow-x-auto pb-4 pt-1 no-scrollbar snap-x">
+                  {msg.products.map(product => (
+                    <div key={product.id} className="product-card-snap">
+                      <ProductCard product={product} primaryColor={primaryColor} />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {index === 0 && messages.length === 1 && msg.sender === SenderType.AI && (
+                <div className="mt-5 flex flex-wrap gap-2.5 w-full">
+                  {quickReplies.map((reply, i) => (
+                    <button
+                      key={i}
+                      onClick={() => onQuickReply(reply)}
+                      className="px-4 py-2 rounded-full text-[13px] font-semibold border border-transparent bg-white text-gray-600 hover:text-indigo-600 hover:border-indigo-100 transition-all duration-200 shadow-sm active:scale-95"
+                    >
+                      {reply}
+                    </button>
+                  ))}
+                </div>
               )}
             </div>
-
-            {msg.type === MessageType.PRODUCT_LIST && msg.products && (
-              <div className="w-full mt-4 flex gap-4 overflow-x-auto pb-4 pt-1 no-scrollbar snap-x">
-                {msg.products.map(product => (
-                  <div key={product.id} className="product-card-snap">
-                    <ProductCard product={product} primaryColor={primaryColor} />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {index === 0 && messages.length === 1 && msg.sender === SenderType.AI && (
-              <div className="mt-5 flex flex-wrap gap-2.5 w-full">
-                {quickReplies.map((reply, i) => (
-                  <button
-                    key={i}
-                    onClick={() => onQuickReply(reply)}
-                    className="px-4 py-2 rounded-full text-[13px] font-semibold border border-transparent bg-white text-gray-600 hover:text-indigo-600 hover:border-indigo-100 transition-all duration-200 shadow-sm active:scale-95"
-                  >
-                    {reply}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {isLoading && (
         <div className="flex flex-col gap-1.5 items-start animate-msg">

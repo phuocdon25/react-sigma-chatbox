@@ -10,6 +10,8 @@ interface ChatboxProps {
   onGetAiResponse: AiResponseHandler;
 }
 
+const STORAGE_LANG_KEY = 'sigma-chat-language';
+
 // Helper to generate random thread ID
 const generateThreadId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
@@ -26,12 +28,22 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
   const [isExpanded, setIsExpanded] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [threadId, setThreadId] = useState(generateThreadId());
-  const [language, setLanguage] = useState<Language>('en');
+  
+  // Initialize language from localStorage or default to 'en'
+  const [language, setLanguage] = useState<Language>(() => {
+    const savedLang = localStorage.getItem(STORAGE_LANG_KEY);
+    return (savedLang as Language) || 'en';
+  });
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const activeRequestId = useRef(0);
+
+  // Persistence: Save language to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_LANG_KEY, language);
+  }, [language]);
 
   // Initialize welcome message based on language
   useEffect(() => {
@@ -43,16 +55,16 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
       content: welcome,
       timestamp: new Date()
     }]);
-  }, []); // Only run once on mount
+  }, []); // Run once on mount
 
-  // Update UI components dynamically
+  // Update UI components dynamically when language changes
   const currentPlaceholder = useMemo(() => getTranslated(config.placeholder, language, "Type a message..."), [config.placeholder, language]);
   const currentQuickReplies = useMemo(() => getTranslated(config.quickReplies, language, []), [config.quickReplies, language]);
   const currentDescription = useMemo(() => getTranslated(config.description, language, ""), [config.description, language]);
 
-  // If user changes language and hasn't started chatting, translate the welcome message
+  // Handle dynamic translation of the first welcome message if it hasn't been engaged yet
   useEffect(() => {
-    if (messages.length === 1 && messages[0].id === 'welcome') {
+    if (messages.length === 1 && (messages[0].id === 'welcome' || messages[0].sender === SenderType.AI)) {
       const welcome = getTranslated(config.welcomeMessage, language, "Hello!");
       setMessages([{ ...messages[0], content: welcome }]);
     }
@@ -161,7 +173,7 @@ export const Chatbox: React.FC<ChatboxProps> = ({ config, onGetAiResponse }) => 
       timestamp: new Date()
     }]);
     setIsLoading(false);
-    setIsExpanded(false);
+    // CRITICAL: Removed setIsExpanded(false) to maintain current layout state
   };
 
   const chatClasses = `
